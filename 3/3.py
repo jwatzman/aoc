@@ -12,15 +12,17 @@ def score(c):
 		raise Exception("invalid char")
 
 f = open(sys.argv[1], "r")
+lines = f.readlines()
 sc = 0
-for line in f.readlines():
-	line = line.rstrip()
-	l = len(line) // 2
-	h1 = line[l:]
-	h2 = line[:l]
-	s = set(h1)
-	for c in list(h2):
-		if c in s:
-			sc += score(c)
-			break
+i = 0
+while i < len(lines):
+	l1 = lines[i].rstrip()
+	l2 = lines[i+1].rstrip()
+	l3 = lines[i+2].rstrip()
+	s = set(l1).intersection(set(l2)).intersection(set(l3))
+	if (len(s) != 1):
+		raise Exception("too many matches")
+	for x in s:
+		sc += score(x)
+	i += 3
 print(sc)
