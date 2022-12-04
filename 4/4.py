@@ -12,9 +12,11 @@ for line in f.readlines():
 	second_st = int(second_st)
 	second_end = int(second_end)
 
-	if first_st >= second_st and first_end <= second_end:
-		cnt += 1
-	elif second_st >= first_st and second_end <= first_end:
+	if first_end < second_st:
+		pass
+	elif second_end < first_st:
+		pass
+	else:
 		cnt += 1
 
 print(cnt)
