@@ -34,8 +34,13 @@ while lineno < len(lines):
 	howmany = int(instr[1])
 	src = int(instr[3]) - 1
 	dest = int(instr[5]) - 1
+	buf = []
 	while howmany > 0:
-		stacks[dest].append(stacks[src].pop())
+		buf.append(stacks[src].pop())
+		howmany -= 1
+	howmany = int(instr[1])
+	while howmany > 0:
+		stacks[dest].append(buf.pop())
 		howmany -= 1
 	lineno += 1
 
