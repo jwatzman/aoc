@@ -61,10 +61,12 @@ def calcsize(n):
 calcsize(root)
 #printdir(root, "")
 
-tot = 0
-MAXSZ = 100000
-for node in allnodes:
-	if node.size < MAXSZ:
-		tot += node.size
+FSTOT = 70000000
+FSNEEDED = 30000000
+FSFREE = FSTOT - root.size
 
-print(tot)
+m = root.size
+for node in allnodes:
+	if node.size < m and FSFREE + node.size >= FSNEEDED:
+		m = node.size
+print(m)
