@@ -10,9 +10,13 @@ class Point:
 	def __str__(self):
 		return "(" + str(self.x) + "," + str(self.y) + ")"
 
-head = Point(0,0)
-tail = Point(0,0)
-all_pos = []
+NTAILS = 9
+LENROPE = NTAILS + 1
+rope = []
+for _ in range(LENROPE):
+	rope.append(Point(0,0))
+
+all_pos = [str(rope[NTAILS])]
 
 def sign(x):
 	if x > 0:
@@ -41,12 +45,15 @@ for line in f.readlines():
 		sys.exit(1)
 
 	for _ in range(int(spl[1])):
-		head.x += dx
-		head.y += dy
+		rope[0].x += dx
+		rope[0].y += dy
 
-		if abs(head.x-tail.x) > 1 or abs(head.y-tail.y) > 1:
-			tail.x += sign(head.x-tail.x)
-			tail.y += sign(head.y-tail.y)
-		all_pos.append(str(tail))
+		for i in range(1, LENROPE):
+			head = rope[i-1]
+			tail = rope[i]
+			if abs(head.x-tail.x) > 1 or abs(head.y-tail.y) > 1:
+				tail.x += sign(head.x-tail.x)
+				tail.y += sign(head.y-tail.y)
+		all_pos.append(str(rope[NTAILS]))
 
 print(len(set(all_pos)))
