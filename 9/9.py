@@ -2,14 +2,17 @@
 
 import sys
 
-hx = 0
-hy = 0
-tx = 0
-ty = 0
-all_pos = []
+class Point:
+	def __init__(self, ix, iy):
+		self.x = ix
+		self.y = iy
+	
+	def __str__(self):
+		return "(" + str(self.x) + "," + str(self.y) + ")"
 
-def printp(x,y):
-	print("(" + str(x) + "," + str(y) + ")")
+head = Point(0,0)
+tail = Point(0,0)
+all_pos = []
 
 def sign(x):
 	if x > 0:
@@ -38,14 +41,12 @@ for line in f.readlines():
 		sys.exit(1)
 
 	for _ in range(int(spl[1])):
-		hx += dx
-		hy += dy
+		head.x += dx
+		head.y += dy
 
-		if abs(hx-tx) > 1 or abs(hy-ty) > 1:
-			tx += sign(hx-tx)
-			ty += sign(hy-ty)
-		all_pos.append(str(tx) + "," + str(ty))
+		if abs(head.x-tail.x) > 1 or abs(head.y-tail.y) > 1:
+			tail.x += sign(head.x-tail.x)
+			tail.y += sign(head.y-tail.y)
+		all_pos.append(str(tail))
 
-#printp(hx,hy)
-#printp(tx,ty)
 print(len(set(all_pos)))
