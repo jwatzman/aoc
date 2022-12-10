@@ -14,11 +14,13 @@ for line in f.readlines():
 
 cycle = 0
 regX = 1
-strength = 0
 for uop in uops:
 	cycle += 1
-	if (cycle - 20) % 40 == 0:
-		strength += cycle * regX
+	hpos = (cycle - 1) % 40
+	if regX == hpos or regX - 1 == hpos or regX + 1 == hpos:
+		print("#", end="")
+	else:
+		print(".", end="")
+	if hpos == 39:
+		print("")
 	regX += uop
-
-print(strength)
