@@ -3,6 +3,7 @@
 import sys
 
 ALL_MONKEYS = []
+ALL_DIV = 1
 
 def stripint(x):
 	return int(x.strip())
@@ -25,10 +26,12 @@ def mkop(opline):
 
 class Monkey:
 	def __init__(self, config):
+		global ALL_DIV
 		lines = config.split("\n")
 		self.items = list(map(stripint, lines[1].split(":")[1].split(",")))
 		self.op = mkop(lines[2])
 		self.div_test = stripint(lines[3].split("by")[1])
+		ALL_DIV *= self.div_test
 		self.true_throw = stripint(lines[4].split("monkey")[1])
 		self.false_throw = stripint(lines[5].split("monkey")[1])
 		self.inspected = 0
@@ -38,10 +41,11 @@ class Monkey:
 
 	def turn(self):
 		while len(self.items) > 0:
+			global ALL_DIV
 			self.inspected += 1
 			item = self.items.pop(0)
 			item = self.op(item)
-			item = item // 3
+			item = item % ALL_DIV
 			if item % self.div_test == 0:
 				throw_to = self.true_throw
 			else:
@@ -61,8 +65,8 @@ configs = open(sys.argv[1], "r").read().split("\n\n")
 for config in configs:
 	ALL_MONKEYS.append(Monkey(config))
 
-NROUNDS = 20
-for _ in range(NROUNDS):
+NROUNDS = 10000
+for r in range(NROUNDS):
 	for monkey in ALL_MONKEYS:
 		monkey.turn()
 
