@@ -2,7 +2,7 @@
 
 import sys
 
-start = None
+starts = []
 end = None
 heights = []
 
@@ -14,18 +14,19 @@ for i in range(len(lines)):
 	for j in range(len(line)):
 		c = line[j]
 		if c == "S":
-			start = (i, j)
 			c = 'a'
 		elif c == "E":
 			end = (i, j)
 			c = 'z'
+		
+		if c == 'a':
+			starts.append((i,j))
 
 		lineheights.append(ord(c) - ord("a"))
 	heights.append(lineheights)
 
 MAX_I = len(heights)
 MAX_J = len(heights[0])
-dist = [[None for _ in range(MAX_J)] for _ in range(MAX_I)]
 
 def movedir(i, j, di, dj):
 	i2 = i + di
@@ -42,18 +43,24 @@ def move(i, j):
 	moves = [movedir(i,j,1,0), movedir(i,j,-1,0), movedir(i,j,0,1), movedir(i,j,0,-1)]
 	return filter(lambda x: x != None, moves)
 
-cur = [start]
-nxt = []
-curdist = 0
-while len(cur) > 0:
+mindist = 9999
+for start in starts:
+	dist = [[None for _ in range(MAX_J)] for _ in range(MAX_I)]
+	cur = [start]
+	nxt = []
+	curdist = 0
 	while len(cur) > 0:
-		(i,j) = cur.pop()
-		if dist[i][j] != None:
-			continue
-		dist[i][j] = curdist
-		nxt.extend(move(i,j))
-	curdist += 1
-	cur = nxt
-	nxt =  []
+		while len(cur) > 0:
+			(i,j) = cur.pop()
+			if dist[i][j] != None:
+				continue
+			dist[i][j] = curdist
+			nxt.extend(move(i,j))
+		curdist += 1
+		cur = nxt
+		nxt =  []
+	startdist = dist[end[0]][end[1]]
+	if startdist != None and startdist < mindist:
+		mindist = startdist
 
-print(dist[end[0]][end[1]])
+print(mindist)
