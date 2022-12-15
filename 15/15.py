@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
+from collections import defaultdict
 import re
 import sys
 
 r = re.compile("Sensor at x=(.+), y=(.+): closest beacon is at x=(.+), y=(.+)")
-targety = int(sys.argv[2])
-bhitx = set()
 
-hitranges = []
+allhitranges = defaultdict(list)
 
 class Rng:
 	def __init__(self, l, r):
@@ -32,15 +31,15 @@ def mergeinto(rng, l, r):
 		return True
 	return False
 
-def addrange(l, r):
+def addrange(hitranges, l, r):
 	for rng in hitranges:
 		if mergeinto(rng, l, r):
 			return
 	hitranges.append(Rng(l, r))
 
-def flattenranges(l):
-	for rng1 in l:
-		for rng2 in l:
+def flattenranges(hitranges):
+	for rng1 in hitranges:
+		for rng2 in hitranges:
 			if rng1 == rng2:
 				continue
 			if mergeinto(rng1, rng2.l, rng2.r):
@@ -49,24 +48,31 @@ def flattenranges(l):
 
 f = open(sys.argv[1], "r")
 for line in f.readlines():
+	print(line.rstrip())
 	m = r.match(line)
 	sx = int(m.group(1))
 	sy = int(m.group(2))
 	bx = int(m.group(3))
 	by = int(m.group(4))
 
-	if by == targety:
-		bhitx.add(bx)
-	
 	steps = abs(sx-bx) + abs(sy-by)
-	if abs(sy-targety) <= steps:
-		steps -= abs(sy-targety)
-		addrange(sx-steps-1, sx+steps+1)
+	for stepy in range(steps+1):
+		stepx = steps - stepy
+		addrange(allhitranges[sy+stepy], sx-stepx, sx+stepx)
+		addrange(allhitranges[sy-stepy], sx-stepx, sx+stepx)
 
-tot = 0
-flattenranges(hitranges)
-for rng in hitranges:
-	tot += rng.r - rng.l
-tot -= len(bhitx)
+print("Done processing.")
 
-print(tot - 1)
+end = int(sys.argv[2])
+for i in range(end):
+	if i % 10000 == 0:
+		print("Processing y=", i)
+	hitranges = allhitranges[i]
+	flattenranges(hitranges)
+	for hitrange in hitranges:
+		if hitrange.l < 0 and hitrange.r < end:
+			print("GAP FOUND AT y=", i, hitrange)
+			for hitrange2 in hitranges:
+				print(hitrange2)
+			print((hitrange.r+1)*4000000+i)
+			sys.exit(0)
