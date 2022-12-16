@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from dataclasses import dataclass
+from itertools import chain, combinations
 import re
 import sys
 
@@ -37,6 +38,10 @@ def dists_from(g, valve):
 			todo_next = []
 	return dists
 
+@dataclass
+class AccumRef:
+	best: int
+
 def all_dists(g):
 	all = dict()
 	for valve in g.valves.values():
@@ -44,30 +49,7 @@ def all_dists(g):
 			all[valve.name] = dists_from(g, valve)
 	return all
 
-"""
-def perms(accum, g, all_dists, cur, path, opened, score, steps_remaining):
-	assert steps_remaining > 0
-	if not cur.name in opened:
-		steps_continued = steps_remaining - 1
-		if steps_continued > 0:
-			path.append(cur.name)
-			opened.add(cur.name)
-			new_score = score + (cur.rate * steps_continued)
-			accum[",".join(path)] = new_score
-			perms(accum, g, all_dists, cur, path, opened, new_score, steps_continued)
-			opened.remove(cur.name)
-			path.pop()
-	dists = all_dists[cur.name]
-	for next_name in dists:
-		next = g.valves[next_name]
-		steps_continued = steps_remaining - dists[next_name]
-		if steps_continued > 1:
-			path.append(next_name)
-			perms(accum, g, all_dists, next, path, opened, score, steps_continued)
-			path.pop()
-"""
-
-def perms(accum, g, all_dists, cur, path, opened, score, steps_remaining):
+def perms(accum, g, all_dists, cur, opened, score, steps_remaining):
 	assert steps_remaining > 0
 	dists = all_dists[cur.name]
 	for next_name in dists:
@@ -76,13 +58,21 @@ def perms(accum, g, all_dists, cur, path, opened, score, steps_remaining):
 		next = g.valves[next_name]
 		steps_continued = steps_remaining - dists[next_name] - 1
 		if steps_continued > 0:
-			path.append(next_name)
 			opened.add(next_name)
 			new_score = score + (next.rate * steps_continued)
-			accum[",".join(path)] = new_score
-			perms(accum, g, all_dists, next, path, opened, new_score, steps_continued)
+			if new_score > accum.best:
+				accum.best = new_score
+			perms(accum, g, all_dists, next, opened, new_score, steps_continued)
 			opened.remove(next_name)
-			path.pop()
+
+def best(g, all_dists, skipme):
+	accum = AccumRef(-1)
+	perms(accum, g, all_dists, g.valves[FIRST_VALVE_NAME], skipme, 0, 26)
+	return accum.best
+
+def powerset(iterable):
+	s = list(iterable)
+	return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
 def main():
 	r = re.compile("Valve (..) has flow rate=(.+); tunnels? leads? to valves? (.+)")
@@ -93,21 +83,29 @@ def main():
 		v = Valve(m.group(1), int(m.group(2)), m.group(3).split(", "))
 		g.valves[v.name] = v
 
-	#print(g)
-	#print(dists_from(g, g.valves["BB"]))
-	#print(all_dists(g))
+	"""
+	d = all_dists(g)
+	b = best(g, d, set())
+	print(b)
+	"""
 
-	accum = dict()
-	perms(accum, g, all_dists(g), g.valves[FIRST_VALVE_NAME], [FIRST_VALVE_NAME], set(), 0, 30)
-	keys = accum.keys()
-	sorted(keys)
-	best = -1
-	for key in keys:
-		val = accum[key]
-		if val > best:
-			best = val
-		#print(f'{key} = {val}')
-	print(best)
+	d = all_dists(g)
+	splitme = set(d.keys())
+	bb = -1
+	ps = list(powerset(d.keys()))
+	i = 0
+	print(len(ps))
+	for subs in ps:
+		i += 1
+		if i % 1000 == 0:
+			print(i)
+		human = set(subs)
+		elephant = splitme.difference(human)
+		b1 = best(g, d, human)
+		b2 = best(g, d, elephant)
+		if b1 + b2 > bb:
+			bb = b1 + b2
+	print(bb)
 
 if __name__ == "__main__":
 	main()
