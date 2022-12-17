@@ -120,7 +120,7 @@ ITERS = int(sys.argv[2])
 i = 0
 prevh = 0
 while i < ITERS:
-	if i < SKIP or len(repeat) < REPEATLEN or i + REPEATLEN >= ITERS:
+	if i < SKIP or len(repeat) < REPEATLEN or i + 2*REPEATLEN >= ITERS:
 		h = c.height()
 		r = Rock(c, next(gRockCoords))
 		assert r.maybemove(2, h + 3) == True
@@ -134,11 +134,13 @@ while i < ITERS:
 		if len(repeat) == REPEATLEN:
 			#print(repeat)
 			repeatsum = sum(repeat)
-		xtra += repeatsum
-		i += REPEATLEN
+		reps = (ITERS - i) // REPEATLEN
+		xtra += reps * repeatsum
+		i += reps * REPEATLEN
 	#if c.height() + xtra == 93657: # 60000 iters
 		#print("win")
 
+#print(i)
 #print(repeatsum)
 #print(c.height())
 #print(xtra)
