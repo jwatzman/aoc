@@ -112,31 +112,34 @@ gRockCoords = genRockCoords()
 SKIP = 4999
 REPEATLEN = 1715
 repeat = []
+repeatsum = None
+xtra = 0
 
 c = Chamber()
 ITERS = int(sys.argv[2])
 i = 0
 prevh = 0
-fails = 0
 while i < ITERS:
-	h = c.height()
-	r = Rock(c, next(gRockCoords))
-	assert r.maybemove(2, h + 3) == True
-	r.descent(gJets)
-
-	if i >= SKIP:
+	if i < SKIP or len(repeat) < REPEATLEN or i + REPEATLEN >= ITERS:
+		h = c.height()
+		r = Rock(c, next(gRockCoords))
+		assert r.maybemove(2, h + 3) == True
+		r.descent(gJets)
 		diff = h - prevh
-		if len(repeat) < REPEATLEN:
-			#print(diff, end="")
+		prevh = h
+		if i >= SKIP and len(repeat) < REPEATLEN:
 			repeat.append(diff)
-		else:
-			if repeat[(i-SKIP) % REPEATLEN] != diff:
-				print("x" + str(diff))
-				fails += 1
-				if fails > 10:
-					print("FAIL")
-					sys.exit(1)
+		i += 1
+	else:
+		if len(repeat) == REPEATLEN:
+			#print(repeat)
+			repeatsum = sum(repeat)
+		xtra += repeatsum
+		i += REPEATLEN
+	#if c.height() + xtra == 93657: # 60000 iters
+		#print("win")
 
-	prevh = h
-	i += 1
-print(c.height())
+#print(repeatsum)
+#print(c.height())
+#print(xtra)
+print(c.height() + xtra)
