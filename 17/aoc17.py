@@ -89,16 +89,19 @@ def genRockCoords():
 		i %= 5
 
 def genJets(line):
-	i = 0
-	l = len(line)
-	while True:
-		c = line[i]
+	jets = []
+	for c in line:
 		if c == "<":
-			yield -1
+			jets.append(-1)
 		elif c == ">":
-			yield 1
+			jets.append(1)
 		else:
 			assert False
+	
+	i = 0
+	l = len(jets)
+	while True:
+		yield jets[i]
 		i += 1
 		i %= l
 
