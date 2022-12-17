@@ -11,25 +11,25 @@ def emptyrow():
 class Chamber:
 	def __init__(self):
 		self.rows = defaultdict(emptyrow)
+		self.maxy = -1
 
 	def occupied(self, x, y):
 		if x < 0 or x >= WIDTH or y < 0:
 			return True
+		if y > self.maxy:
+			return False
 		return self.rows[y][x]
 
 	def occupy(self, x, y):
-		#assert self.occupied(x, y) == False
 		self.rows[y][x] = True
-		yy = y - 1000
+		if y > self.maxy:
+			self.maxy = y
+		yy = y - 100
 		if yy in self.rows:
 			del self.rows[yy]
 
 	def height(self):
-		l = max(self.rows.keys(), default=0)
-		for y in reversed(range(l + 1)):
-			if any(self.rows[y]):
-				return y + 1
-		return 0
+		return self.maxy + 1
 
 	def print(self):
 		for y in reversed(range(self.height())):
