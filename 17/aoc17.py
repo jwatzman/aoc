@@ -109,14 +109,34 @@ f = open(sys.argv[1], "r")
 gJets = genJets(f.read().rstrip())
 gRockCoords = genRockCoords()
 
+SKIP = 4999
+REPEATLEN = 1715
+repeat = []
+
 c = Chamber()
 ITERS = int(sys.argv[2])
-for i in range(ITERS):
-	if i % 100000 == 0:
-		print(i)
+i = 0
+prevh = 0
+fails = 0
+while i < ITERS:
 	h = c.height()
 	r = Rock(c, next(gRockCoords))
 	assert r.maybemove(2, h + 3) == True
 	r.descent(gJets)
-	#c.print()
+
+	if i >= SKIP:
+		diff = h - prevh
+		if len(repeat) < REPEATLEN:
+			#print(diff, end="")
+			repeat.append(diff)
+		else:
+			if repeat[(i-SKIP) % REPEATLEN] != diff:
+				print("x" + str(diff))
+				fails += 1
+				if fails > 10:
+					print("FAIL")
+					sys.exit(1)
+
+	prevh = h
+	i += 1
 print(c.height())
