@@ -18,8 +18,11 @@ class Chamber:
 		return self.rows[y][x]
 
 	def occupy(self, x, y):
-		assert self.occupied(x, y) == False
+		#assert self.occupied(x, y) == False
 		self.rows[y][x] = True
+		yy = y - 1000
+		if yy in self.rows:
+			del self.rows[yy]
 
 	def height(self):
 		l = max(self.rows.keys(), default=0)
@@ -105,8 +108,10 @@ gJets = genJets(f.read().rstrip())
 gRockCoords = genRockCoords()
 
 c = Chamber()
-ITERS = 2022
-for _ in range(ITERS):
+ITERS = int(sys.argv[2])
+for i in range(ITERS):
+	if i % 100000 == 0:
+		print(i)
 	h = c.height()
 	r = Rock(c, next(gRockCoords))
 	assert r.maybemove(2, h + 3) == True
