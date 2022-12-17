@@ -73,19 +73,18 @@ class Rock:
 def genRockCoords():
 	i = 0
 	while True:
-		match i:
-			case 0:
-				yield [(0,0), (1,0), (2,0), (3,0)]
-			case 1:
-				yield [(1,0), (0,1), (1,1), (2,1), (1,2)]
-			case 2:
-				yield [(0,0), (1,0), (2,0), (2,1), (2,2)]
-			case 3:
-				yield [(0,0), (0,1), (0,2), (0,3)]
-			case 4:
-				yield [(0,0), (1,0), (0,1), (1,1)]
-			case _:
-				assert False
+		if i == 0:
+			yield [(0,0), (1,0), (2,0), (3,0)]
+		elif i == 1:
+			yield [(1,0), (0,1), (1,1), (2,1), (1,2)]
+		elif i == 2:
+			yield [(0,0), (1,0), (2,0), (2,1), (2,2)]
+		elif i == 3:
+			yield [(0,0), (0,1), (0,2), (0,3)]
+		elif i == 4:
+			yield [(0,0), (1,0), (0,1), (1,1)]
+		else:
+			assert False
 		i += 1
 		i %= 5
 
