@@ -51,7 +51,7 @@ def stepall(blueprint, accum, enable_orerob, enable_clayrob, enable_obsrob, enab
 def sumto(n):
 	return n * (n + 1) / 2
 
-def prune(states, remsteps):
+def prune(blueprint, states, remsteps):
 	do_nothing_ge = -1
 	do_nothing_state = None
 	for state in states:
@@ -63,7 +63,18 @@ def prune(states, remsteps):
 	r = set()
 	while states:
 		state = states.pop()
-		potential_ge = state.ge + state.gerob * remsteps + sumto(remsteps)
+
+		# Produce one new obsrob every step
+		potential_obs = state.obs + state.obsrob * remsteps + sumto(remsteps)
+		# Which lets us produce only so many gerob
+		potential_gerob = potential_obs // blueprint.gerob_obs
+
+		# Number of gerob we can produce is limited by obs and by time
+		potential_gerob = min(remsteps, potential_gerob)
+
+		# Produce one new gerob every step
+		potential_ge = state.ge + state.gerob * remsteps + sumto(potential_gerob)
+
 		if potential_ge >= do_nothing_ge:
 			r.add(state)
 		#else:
@@ -94,7 +105,7 @@ for blueprint in blueprints:
 		states = newstates
 
 		remsteps = NSTEPS - stepnum
-		newstates = prune(states, remsteps)
+		newstates = prune(blueprint, states, remsteps)
 		del states
 		states = newstates
 	m = 0
