@@ -48,6 +48,29 @@ def stepall(blueprint, accum, enable_orerob, enable_clayrob, enable_obsrob, enab
 		del state
 	return r
 
+def sumto(n):
+	return n * (n + 1) / 2
+
+def prune(states, remsteps):
+	do_nothing_ge = -1
+	do_nothing_state = None
+	for state in states:
+		ge = state.ge + state.gerob * remsteps
+		if ge > do_nothing_ge:
+			do_nothing_ge = ge
+			do_nothing_state = state
+
+	r = set()
+	while states:
+		state = states.pop()
+		potential_ge = state.ge + state.gerob * remsteps + sumto(remsteps)
+		if potential_ge >= do_nothing_ge:
+			r.add(state)
+		#else:
+			#print(".", end = "", flush=True)
+		del state
+	return r
+
 r = re.compile("Blueprint (.+): Each ore robot costs (.+) ore. Each clay robot costs (.+) ore. Each obsidian robot costs (.+) ore and (.+) clay. Each geode robot costs (.+) ore and (.+) obsidian.")
 
 blueprints = []
@@ -57,7 +80,7 @@ for line in f.readlines():
 	args = map(int, m.groups())
 	blueprints.append(Blueprint(*args))
 
-NSTEPS = 32
+NSTEPS = int(sys.argv[2])
 
 tot = 1
 for blueprint in blueprints:
@@ -67,6 +90,11 @@ for blueprint in blueprints:
 	for stepnum in range(NSTEPS):
 		print(stepnum, end=" ", flush=True)
 		newstates = stepall(blueprint, states, stepnum < NSTEPS - 4, stepnum < NSTEPS - 3, stepnum < NSTEPS - 2, stepnum < NSTEPS - 1)
+		del states
+		states = newstates
+
+		remsteps = NSTEPS - stepnum
+		newstates = prune(states, remsteps)
 		del states
 		states = newstates
 	m = 0
