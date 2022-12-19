@@ -25,26 +25,26 @@ class State:
 	obsrob: int
 	gerob: int
 
-	def step(self, blueprint, accum):
+	def step(self, blueprint, accum, enable_orerob, enable_clayrob, enable_obsrob, enable_gerob):
 		newore = self.ore + self.orerob
 		newclay = self.clay + self.clayrob
 		newobs = self.obs + self.obsrob
 		newge = self.ge + self.gerob
 		accum.add(State(newore, newclay, newobs, newge, self.orerob, self.clayrob, self.obsrob, self.gerob))
-		if self.ore >= blueprint.orerob_ore:
+		if enable_orerob and self.ore >= blueprint.orerob_ore:
 			accum.add(State(newore - blueprint.orerob_ore, newclay, newobs, newge, self.orerob + 1, self.clayrob, self.obsrob, self.gerob))
-		if self.ore >= blueprint.clayrob_ore:
+		if enable_clayrob and self.ore >= blueprint.clayrob_ore:
 			accum.add(State(newore - blueprint.clayrob_ore, newclay, newobs, newge, self.orerob, self.clayrob + 1, self.obsrob, self.gerob))
-		if self.ore >= blueprint.obsrob_ore and self.clay >= blueprint.obsrob_clay:
+		if enable_obsrob and self.ore >= blueprint.obsrob_ore and self.clay >= blueprint.obsrob_clay:
 			accum.add(State(newore - blueprint.obsrob_ore, newclay - blueprint.obsrob_clay, newobs, newge, self.orerob, self.clayrob, self.obsrob + 1, self.gerob))
-		if self.ore >= blueprint.gerob_ore and self.obs >= blueprint.gerob_obs:
+		if enable_gerob and self.ore >= blueprint.gerob_ore and self.obs >= blueprint.gerob_obs:
 			accum.add(State(newore - blueprint.gerob_ore, newclay, newobs - blueprint.gerob_obs, newge, self.orerob, self.clayrob, self.obsrob, self.gerob + 1))
 
-def stepall(blueprint, accum):
+def stepall(blueprint, accum, enable_orerob, enable_clayrob, enable_obsrob, enable_gerob):
 	r = set()
 	while accum:
 		state = accum.pop()
-		state.step(blueprint, r)
+		state.step(blueprint, r, enable_orerob, enable_clayrob, enable_obsrob, enable_gerob)
 		del state
 	return r
 
@@ -57,13 +57,16 @@ for line in f.readlines():
 	args = map(int, m.groups())
 	blueprints.append(Blueprint(*args))
 
+NSTEPS = 24
+
+tot = 0
 for blueprint in blueprints:
 	print(blueprint)
 	states = set()
 	states.add(State(0, 0, 0, 0, 1, 0, 0, 0))
-	for s in range(24):
-		print(s, end=" ", flush=True)
-		newstates = stepall(blueprint, states)
+	for stepnum in range(24):
+		print(stepnum, end=" ", flush=True)
+		newstates = stepall(blueprint, states, stepnum < NSTEPS - 4, stepnum < NSTEPS - 3, stepnum < NSTEPS - 2, stepnum < NSTEPS - 1)
 		del states
 		states = newstates
 	m = 0
@@ -73,3 +76,6 @@ for blueprint in blueprints:
 			m = s.ge
 		del s
 	print("-> ", m)
+	tot += blueprint.n * m
+
+print(tot)
