@@ -52,6 +52,7 @@ def sumto(n):
 	return n * (n + 1) / 2
 
 def prune(blueprint, states, remsteps):
+	#print("p", end="", flush=True)
 	do_nothing_ge = -1
 	do_nothing_state = None
 	for state in states:
@@ -80,6 +81,7 @@ def prune(blueprint, states, remsteps):
 		#else:
 			#print(".", end = "", flush=True)
 		del state
+	#print("p", end="", flush=True)
 	return r
 
 r = re.compile("Blueprint (.+): Each ore robot costs (.+) ore. Each clay robot costs (.+) ore. Each obsidian robot costs (.+) ore and (.+) clay. Each geode robot costs (.+) ore and (.+) obsidian.")
@@ -105,7 +107,7 @@ for blueprint in blueprints:
 		states = newstates
 
 		remsteps = NSTEPS - stepnum
-		newstates = prune(blueprint, states, remsteps)
+		newstates = prune(blueprint, states, remsteps - 1)
 		del states
 		states = newstates
 	m = 0
