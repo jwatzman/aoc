@@ -57,14 +57,14 @@ for line in f.readlines():
 	args = map(int, m.groups())
 	blueprints.append(Blueprint(*args))
 
-NSTEPS = 24
+NSTEPS = 32
 
-tot = 0
+tot = 1
 for blueprint in blueprints:
 	print(blueprint)
 	states = set()
 	states.add(State(0, 0, 0, 0, 1, 0, 0, 0))
-	for stepnum in range(24):
+	for stepnum in range(NSTEPS):
 		print(stepnum, end=" ", flush=True)
 		newstates = stepall(blueprint, states, stepnum < NSTEPS - 4, stepnum < NSTEPS - 3, stepnum < NSTEPS - 2, stepnum < NSTEPS - 1)
 		del states
@@ -76,6 +76,6 @@ for blueprint in blueprints:
 			m = s.ge
 		del s
 	print("-> ", m)
-	tot += blueprint.n * m
+	tot *= m
 
 print(tot)
