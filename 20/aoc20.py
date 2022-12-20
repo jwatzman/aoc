@@ -25,6 +25,27 @@ def print_adj(start):
 			return
 		cur = next
 
+def mix(cur):
+	global tot
+	while cur != None:
+		amt = cur.val % (tot - 1)
+		#if cur.val < 0:
+			#amt -= 1
+		assert amt >= 0 and amt < tot
+		if amt > 0:
+			#print("moving", cur)
+			target = advance_adj(cur, amt)
+			assert target != cur
+
+			cur.adj_prev.adj_next = cur.adj_next
+			cur.adj_next.adj_prev = cur.adj_prev
+
+			cur.adj_prev = target
+			cur.adj_next = target.adj_next
+			target.adj_next = cur
+			cur.adj_next.adj_prev = cur
+		cur = cur.orig_next
+
 head = None
 cur = None
 znode = None
@@ -32,7 +53,7 @@ tot = 0
 
 f = open(sys.argv[1], "r")
 for line in f.readlines():
-	n = Node(int(line.rstrip()))
+	n = Node(int(line.rstrip()) * 811589153)
 	if head == None:
 		head = n
 	else:
@@ -51,25 +72,8 @@ head.adj_prev = cur
 
 assert znode != None
 
-cur = head
-while cur != None:
-	amt = cur.val % (tot - 1)
-	#if cur.val < 0:
-		#amt -= 1
-	assert amt >= 0 and amt < tot
-	if amt > 0:
-		#print("moving", cur)
-		target = advance_adj(cur, amt)
-		assert target != cur
-
-		cur.adj_prev.adj_next = cur.adj_next
-		cur.adj_next.adj_prev = cur.adj_prev
-
-		cur.adj_prev = target
-		cur.adj_next = target.adj_next
-		target.adj_next = cur
-		cur.adj_next.adj_prev = cur
-	cur = cur.orig_next
+for _ in range(10):
+	mix(head)
 
 #print_adj(znode)
 
