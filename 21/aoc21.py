@@ -48,4 +48,15 @@ for line in f.readlines():
 		assert False
 	monkeys[m.name] = m
 
-print(resolve(monkeys, "root"))
+monkeys["humn"].val = int(sys.argv[2])
+root = monkeys["root"]
+lval = resolve(monkeys, root.lname)
+rval = resolve(monkeys, root.rname)
+print(f"{root.lname}: {lval}")
+print(f"{root.rname}: {rval}")
+if lval > rval:
+	print("TOO BIG")
+elif lval < rval:
+	print("TOO SMALL")
+else:
+	print("WIN")
