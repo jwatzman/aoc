@@ -19,11 +19,14 @@ def move(grid, pos, dpos):
 		assert newrow >= 0 and newrow < lengrid
 
 		lenrow = len(grid[newrow])
-		if newcol < 0 and dcol != 0:
+		if newcol < 0:
 			newcol += lenrow
-		elif newcol >= lenrow and dcol != 0:
+		elif newcol >= lenrow:
+			if dcol == 0:
+				c = " "
+				continue
 			newcol -= lenrow
-		#assert newcol >= 0 and newcol < lenrow
+		assert newcol >= 0 and newcol < lenrow
 
 		try:
 			c = grid[newrow][newcol]
