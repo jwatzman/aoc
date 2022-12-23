@@ -68,21 +68,12 @@ for row in range(len(lines)):
 		else:
 			assert c == "."
 
-for stepnum in range(10):
-	elves = step(elves, stepnum)
-#print(elves)
+stepnum = 0
+while True:
+	new_elves = step(elves, stepnum)
+	if new_elves == elves:
+		break
+	elves = new_elves
+	stepnum += 1
 
-rows = set()
-cols = set()
-for (r, c) in elves:
-	rows.add(r)
-	cols.add(c)
-
-min_row = min(rows)
-max_row = max(rows)
-min_col = min(cols)
-max_col = max(cols)
-#print(min_row, max_row, min_col, max_col)
-
-bounding_rect = (max_row - min_row + 1) * (max_col - min_col + 1)
-print(bounding_rect - len(elves))
+print(stepnum + 1)
