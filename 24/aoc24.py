@@ -60,11 +60,10 @@ for row in range(0, grid.numrows):
 
 def wander(grid):
 	playerlocs = set()
-	playerlocs.add((0,0))
 	dest = (grid.numrows - 1, grid.numcols - 1)
 	time = 0
 	while True:
-		print(f"Computing {time}...")
+		#print(f"Computing {time}...")
 		newplayerlocs = set()
 		invalid = grid.advance()
 		if (0,0) not in invalid:
