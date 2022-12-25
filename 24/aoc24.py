@@ -58,16 +58,15 @@ for row in range(0, grid.numrows):
 		else:
 			assert False
 
-def wander(grid):
+def wander(grid, start, dest):
 	playerlocs = set()
-	dest = (grid.numrows - 1, grid.numcols - 1)
 	time = 0
 	while True:
 		#print(f"Computing {time}...")
 		newplayerlocs = set()
 		invalid = grid.advance()
-		if (0,0) not in invalid:
-			playerlocs.add((0,0)) # (implicitly) waited until now to step out into the fray
+		if start not in invalid:
+			playerlocs.add(start) # (implicitly) waited until now to step out into the fray
 		for loc in playerlocs:
 			if loc == dest:
 				return time + 1 # last step is always out of the main grid
@@ -85,4 +84,11 @@ def wander(grid):
 		playerlocs = newplayerlocs
 		time += 1
 
-print(wander(grid))
+start = (0,0)
+end = (grid.numrows - 1, grid.numcols - 1)
+
+tot = 0
+tot += wander(grid, start, end)
+tot += wander(grid, end, start)
+tot += wander(grid, start, end)
+print(tot)
