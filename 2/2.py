@@ -1,36 +1,29 @@
 #!/usr/bin/env python3
 
+from collections import defaultdict
 import re
 import sys
 
 f = open(sys.argv[1], "r")
 
 r = re.compile("(\d+) (red|green|blue)")
-def is_valid_pull(pull):
+def pull_info(pull):
 	m = r.match(pull)
 	n = int(m.group(1))
 	colour = m.group(2)
-	if colour == "red" and n > 12:
-		return False
-	elif colour == "green" and n > 13:
-		return False
-	elif colour == "blue" and n > 14:
-		return False
-	else:
-		return True
+	return (colour, n)
 
-def is_valid_game(game):
+def game_power(game):
+	min_balls = defaultdict(int)
 	for reveal in game.split(";"):
 		for pull in reveal.strip().split(","):
-			if not is_valid_pull(pull.strip()):
-				return False
-	return True
+			(colour, n) = pull_info(pull.strip())
+			min_balls[colour] = max(min_balls[colour], n)
+	return min_balls["red"] * min_balls["green"] * min_balls["blue"]
 
 tot = 0
 for line in f.readlines():
 	line_split = line.split(":")
-	if is_valid_game(line_split[1].strip()):
-		gamenum = int(line_split[0][5:])
-		tot += gamenum
+	tot += game_power(line_split[1].strip())
 
 print(tot)
