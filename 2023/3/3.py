@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 
+from collections import defaultdict
 import sys
 
 f = open(sys.argv[1], "r")
 
-nums = []
-symbols = dict()
+nums = defaultdict(list)
+gear_candidates = set()
+
+def insert_num(num):
+	for linenum in range(num[1] - 1, num[1] + 2):
+		for colnum in range(num[2] - len(str(num[0])), num[2] + 2):
+			nums[(linenum, colnum)].append(num)
+
 linenum = 0
 for line in f.readlines():
 	linenum += 1
@@ -18,23 +25,17 @@ for line in f.readlines():
 			n += int(char)
 		else:
 			if n > 0:
-				nums.append((n, linenum, colnum - 1))
+				insert_num((n, linenum, colnum - 1))
 				n = 0
-			if char != ".":
-				symbols[(linenum, colnum)] = True
+			if char == "*":
+				gear_candidates.add((linenum, colnum))
 	if n > 0:
-		nums.append((n, linenum, colnum))
-
-def is_near_symbol(num):
-	for linenum in range(num[1] - 1, num[1] + 2):
-		for colnum in range(num[2] - len(str(num[0])), num[2] + 2):
-			if (linenum, colnum) in symbols:
-				return True
-	return False
+		insert_num((n, linenum, colnum))
 
 tot = 0
-for num in nums:
-	if is_near_symbol(num):
-		tot += num[0]
+for candidate in gear_candidates:
+	nearby = nums[candidate]
+	if len(nearby) == 2:
+		tot += nearby[0][0] * nearby[1][0]
 
 print(tot)
