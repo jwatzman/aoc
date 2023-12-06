@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
+import re
 import sys
 
 def read_ints(line):
-	res = []
-	for n in line.split(":")[1].split(" "):
-		if n != "" and n != " ":
-			res.append(int(n))
-	return res
+	ns = line.split(":")[1]
+	r = re.compile(r"\s+")
+	return [int(r.sub("", ns))]
 
 f = open(sys.argv[1], "r")
 lines = f.readlines()
