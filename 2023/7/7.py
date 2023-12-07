@@ -14,12 +14,19 @@ def read_hands():
 
 def strength(cards):
 	card_cnts = dict()
+	jokers = 0
 	for card in cards:
-		if card in card_cnts:
+		if card == "J":
+			jokers += 1
+		elif card in card_cnts:
 			card_cnts[card] += 1
 		else:
 			card_cnts[card] = 1
 	cnts = list(reversed(sorted(card_cnts.values())))
+	if len(cnts) > 0:
+		cnts[0] += jokers
+	else:
+		cnts = [jokers]
 	if cnts[0] == 5:
 		return 7
 	elif cnts[0] == 4:
@@ -39,7 +46,7 @@ def card_val(card):
 	if card == "T":
 		return 10
 	elif card == "J":
-		return 11
+		return 1
 	elif card == "Q":
 		return 12
 	elif card == "K":
