@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+from functools import reduce
 from itertools import cycle
+from math import lcm
 import re
 import sys
 
@@ -12,12 +14,6 @@ def read_nodes(lines):
 		m = r.match(line)
 		res[m.group(1)] = (m.group(2), m.group(3))
 	return res
-
-def is_end(positions):
-	for position in positions:
-		if position[2] != 'Z':
-			return False
-	return True
 
 f = open(sys.argv[1], "r")
 lines = f.readlines()
@@ -33,17 +29,19 @@ for node in nodes.keys():
 		positions.append(node)
 
 print(positions)
-steps = 0
-for step in cycle(path):
-	new_positions = []
-	for position in positions:
-		node = nodes[position]
+cycle_steps = []
+for position in positions:
+	cur = position
+	steps = 0
+	for step in cycle(path):
+		node = nodes[cur]
 		if step == "L":
-			new_positions.append(node[0])
+			cur = node[0]
 		else:
-			new_positions.append(node[1])
-	positions = new_positions
-	steps += 1
-	if is_end(positions):
-		break
-print(steps)
+			cur = node[1]
+		steps += 1
+		if cur[2] == 'Z':
+			break
+	cycle_steps.append(steps)
+print(cycle_steps)
+print(reduce(lambda x,y: lcm(x,y), cycle_steps, 1))
