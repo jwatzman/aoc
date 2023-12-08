@@ -13,6 +13,12 @@ def read_nodes(lines):
 		res[m.group(1)] = (m.group(2), m.group(3))
 	return res
 
+def is_end(positions):
+	for position in positions:
+		if position[2] != 'Z':
+			return False
+	return True
+
 f = open(sys.argv[1], "r")
 lines = f.readlines()
 
@@ -21,15 +27,23 @@ lines.pop(0)
 
 nodes = read_nodes(lines)
 
-position = 'AAA'
+positions = []
+for node in nodes.keys():
+	if node[2] == 'A':
+		positions.append(node)
+
+print(positions)
 steps = 0
 for step in cycle(path):
-	node = nodes[position]
-	if step == "L":
-		position = node[0]
-	else:
-		position = node[1]
+	new_positions = []
+	for position in positions:
+		node = nodes[position]
+		if step == "L":
+			new_positions.append(node[0])
+		else:
+			new_positions.append(node[1])
+	positions = new_positions
 	steps += 1
-	if position == 'ZZZ':
+	if is_end(positions):
 		break
 print(steps)
