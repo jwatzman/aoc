@@ -20,9 +20,9 @@ def solve(input):
 		pyramid.append(next)
 
 	for i in reversed(range(len(pyramid) - 1)):
-		pyramid[i].append(pyramid[i][-1] + pyramid[i+1][-1])
+		pyramid[i].insert(0, pyramid[i][0] - pyramid[i+1][0])
 
-	return pyramid[0][-1]
+	return pyramid[0][0]
 
 f = open(sys.argv[1], "r")
 tot = 0
