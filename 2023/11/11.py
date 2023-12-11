@@ -33,12 +33,14 @@ for i in range(len(galaxies)):
 		(cmin, cmax) = minmax(g1[1], g2[1])
 		dist = 0
 		for r in range(rmin, rmax):
-			dist += 1
 			if r in empty_rows:
+				dist += 1000000
+			else:
 				dist += 1
 		for c in range(cmin, cmax):
-			dist += 1
 			if c in empty_cols:
+				dist += 1000000
+			else:
 				dist += 1
 		tot += dist
 
