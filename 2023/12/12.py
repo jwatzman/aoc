@@ -2,11 +2,6 @@
 
 import sys
 
-"""
-class SpringFail(Exception):
-	pass
-"""
-
 UNFURLING_FACTOR = 5
 
 def parse_line(l):
@@ -17,10 +12,7 @@ def parse_line(l):
 	return (list(springs), list(groups) * UNFURLING_FACTOR)
 
 def is_all_unknown(s):
-	for c in s:
-		if c != "?":
-			return False
-	return True
+	return all(map(lambda c: c == "?", s))
 
 cache = dict()
 def solve(springs, groups):
@@ -50,19 +42,9 @@ def solve_impl(springs, groups):
 
 	solns = 0
 
-	if group_size > len(spring_block):
-		if is_all_unknown(spring_block):
-			return solve(springs[1:], groups)
-		else:
-			return 0
-
 	if (len(spring_block) == group_size):
 		solns += solve(springs[1:], groups[1:])
-		if (is_all_unknown(spring_block)):
-			solns += solve(springs[1:], groups)
-		return solns
-
-	if (len(spring_block) > group_size and spring_block[group_size] == "?"):
+	elif (len(spring_block) > group_size and spring_block[group_size] == "?"):
 		solns += solve([spring_block[(group_size+1):], *springs[1:]], groups[1:])
 
 	if spring_block[0] == "?":
@@ -71,7 +53,6 @@ def solve_impl(springs, groups):
 	return solns
 
 f = open(sys.argv[1], "r")
-i = 0
 tot = 0
 for line in f.readlines():
 	(springs, groups) = parse_line(line)
