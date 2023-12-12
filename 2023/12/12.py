@@ -22,7 +22,16 @@ def is_all_unknown(s):
 			return False
 	return True
 
+cache = dict()
 def solve(springs, groups):
+	k = ("!".join(springs), ",".join(map(str, groups)))
+	if k in cache:
+		return cache[k]
+	v = solve_impl(springs, groups)
+	cache[k] = v
+	return v
+
+def solve_impl(springs, groups):
 	if len(springs) == 0 and len(groups) == 0:
 		return 1
 	if len(springs) == 0:
@@ -65,8 +74,6 @@ f = open(sys.argv[1], "r")
 i = 0
 tot = 0
 for line in f.readlines():
-	i += 1
-	print(i)
 	(springs, groups) = parse_line(line)
 	tot += solve(springs, groups)
 
