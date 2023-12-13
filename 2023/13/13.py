@@ -23,15 +23,21 @@ def rot(l):
 
 def find_reflect(pattern):
 	for reflect_line_after in range(len(pattern) - 1):
-		okay = True
+		diffs = 0
 		for dist in range(reflect_line_after + 1):
 			if reflect_line_after - dist < 0 or reflect_line_after + dist + 1 >= len(pattern):
 				# Probably a smarter way to set the range of dist...
 				break
-			if pattern[reflect_line_after - dist] != pattern[reflect_line_after + dist + 1]:
-				okay = False
-				break
-		if okay:
+
+			line1 = pattern[reflect_line_after - dist]
+			line2 = pattern[reflect_line_after + dist + 1]
+			assert len(line1) == len(line2)
+
+			for i in range(len(line1)):
+				if line1[i] != line2[i]:
+					diffs += 1
+
+		if diffs == 1:
 			return reflect_line_after + 1
 	return None
 
