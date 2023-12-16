@@ -17,37 +17,48 @@ def inbounds(beam):
 def add_beam(loc, direc):
 	return (loc[0] + direc[0], loc[1] + direc[1])
 
-beams = set()
-beams.add(((0, 0), (0, 1)))
-loop_detect = set()
-energized = set()
+def run_simul(init_beam):
+	beams = set()
+	beams.add(init_beam)
+	loop_detect = set()
+	energized = set()
 
-while len(beams) > 0:
-	new_beams = set()
+	while len(beams) > 0:
+		new_beams = set()
 
-	for beam in beams:
-		loop_detect.add(beam)
-		energized.add(beam[0])
-		loc = beam[0]
-		direc = beam[1]
-		c = grid[loc[0]][loc[1]]
-		if c == "." or (c == "|" and direc[1] == 0) or (c == "-" and direc[0] == 0):
-			new_beams.add((add_beam(loc, direc), direc))
-		elif c == "\\":
-			new_direc = (direc[1], direc[0])
-			new_beams.add((add_beam(loc, new_direc), new_direc))
-		elif c == "/":
-			new_direc = (-direc[1], -direc[0])
-			new_beams.add((add_beam(loc, new_direc), new_direc))
-		elif c == "|":
-			new_beams.add(((loc[0] - 1, loc[1]), (-1, 0)))
-			new_beams.add(((loc[0] + 1, loc[1]), (1, 0)))
-		elif c == "-":
-			new_beams.add(((loc[0], loc[1] - 1), (0, -1)))
-			new_beams.add(((loc[0], loc[1] + 1), (0, 1)))
-		else:
-			assert False
+		for beam in beams:
+			loop_detect.add(beam)
+			energized.add(beam[0])
+			loc = beam[0]
+			direc = beam[1]
+			c = grid[loc[0]][loc[1]]
+			if c == "." or (c == "|" and direc[1] == 0) or (c == "-" and direc[0] == 0):
+				new_beams.add((add_beam(loc, direc), direc))
+			elif c == "\\":
+				new_direc = (direc[1], direc[0])
+				new_beams.add((add_beam(loc, new_direc), new_direc))
+			elif c == "/":
+				new_direc = (-direc[1], -direc[0])
+				new_beams.add((add_beam(loc, new_direc), new_direc))
+			elif c == "|":
+				new_beams.add(((loc[0] - 1, loc[1]), (-1, 0)))
+				new_beams.add(((loc[0] + 1, loc[1]), (1, 0)))
+			elif c == "-":
+				new_beams.add(((loc[0], loc[1] - 1), (0, -1)))
+				new_beams.add(((loc[0], loc[1] + 1), (0, 1)))
+			else:
+				assert False
 
-	beams = set(filter(lambda beam: (beam not in loop_detect) and inbounds(beam), new_beams))
+		beams = set(filter(lambda beam: (beam not in loop_detect) and inbounds(beam), new_beams))
 
-print(len(energized))
+	return len(energized)
+
+res = []
+for row in range(NROWS):
+	res.append(run_simul(((row, 0), (0, 1))))
+	res.append(run_simul(((row, NCOLS-1), (0, -1))))
+for col in range(NCOLS):
+	res.append(run_simul(((0, col), (1, 0))))
+	res.append(run_simul(((NROWS-1, col), (-1, 0))))
+
+print(max(res))
