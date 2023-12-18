@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 
+from collections import defaultdict
 import sys
 
 def read_walls():
-	walls = set()
+	walls = defaultdict(set)
 	p = complex(0,0)
+	minrow = 0
+	maxrow = 0
+	mincol = 0
+	maxcol = 0
 
 	f = open(sys.argv[1], "r")
 	for line in f.readlines():
@@ -23,41 +28,45 @@ def read_walls():
 			assert False
 		for i in range(amt):
 			p += direc
-			walls.add(p)
+			walls[int(p.real)].add(int(p.imag))
+		if p.real > maxrow:
+			maxrow = int(p.real)
+		if p.real < minrow:
+			minrow = int(p.real)
+		if p.imag > maxcol:
+			maxcol = int(p.imag)
+		if p.imag < mincol:
+			mincol = int(p.imag)
 
 	assert p.real == 0
 	assert p.imag == 0
 	print("Walls computed")
-	return walls
+	return (walls, minrow, maxrow, mincol, maxcol)
 
-def scan_all(walls):
-	rows = list(map(lambda c: int(c.real), walls))
-	cols = list(map(lambda c: int(c.imag), walls))
-	minrow = min(rows)
-	maxrow = max(rows)
-	mincol = min(cols)
-	maxcol = max(cols)
+def scan_all(tpl):
+	(walls, minrow, maxrow, mincol, maxcol) = tpl
 	print(minrow, maxrow)
 
 	tot = 0
 	for row in range(minrow, maxrow+1):
-		if row % 10000 == 0:
-			print(row)
+		if row % 100 == 0:
+			print(row / maxrow * 100)
 		wall_from_above = None
 		wall_thickness = 0
 		in_trench = False
+		cur_wall = walls[row]
+		prev_wall = walls[row-1]
 		for col in range(mincol, maxcol+1):
-			p = complex(row, col)
-			if p in walls:
+			if col in cur_wall:
 				tot += 1
 				wall_thickness += 1
 				if wall_from_above == None:
-					wall_from_above = (complex(row-1, col) in walls)
+					wall_from_above = (col in prev_wall)
 			else:
 				if wall_thickness == 1:
 					in_trench = not in_trench
 				elif wall_from_above != None:
-					wall_ends_above = (complex(row-1,col-1) in walls)
+					wall_ends_above = ((col-1) in prev_wall)
 					if wall_from_above != wall_ends_above:
 						in_trench = not in_trench
 				wall_thickness = 0
