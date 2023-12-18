@@ -9,15 +9,15 @@ def read_walls():
 	f = open(sys.argv[1], "r")
 	for line in f.readlines():
 		spl = line.split(" ")
-		direc_letter = spl[0]
-		amt = int(spl[1])
-		if direc_letter == "U":
+		amt = int(spl[2][2:7], 16)
+		direc_letter = spl[2][7]
+		if direc_letter == "3":
 			direc = complex(-1,0)
-		elif direc_letter == "D":
+		elif direc_letter == "1":
 			direc = complex(1,0)
-		elif direc_letter == "L":
+		elif direc_letter == "2":
 			direc = complex(0,-1)
-		elif direc_letter == "R":
+		elif direc_letter == "0":
 			direc = complex(0,1)
 		else:
 			assert False
@@ -27,6 +27,7 @@ def read_walls():
 
 	assert p.real == 0
 	assert p.imag == 0
+	print("Walls computed")
 	return walls
 
 def scan_all(walls):
@@ -36,9 +37,12 @@ def scan_all(walls):
 	maxrow = max(rows)
 	mincol = min(cols)
 	maxcol = max(cols)
+	print(minrow, maxrow)
 
 	tot = 0
 	for row in range(minrow, maxrow+1):
+		if row % 10000 == 0:
+			print(row)
 		wall_from_above = None
 		wall_thickness = 0
 		in_trench = False
