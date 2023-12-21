@@ -34,14 +34,21 @@ assert get_plot(plot, sz, start) == "S"
 
 steps = int(sys.argv[2])
 work = set()
+visited = set()
+parity_visited = set()
+parity = steps % 2
 work.add(start)
 while steps > 0:
 	if (steps % 100 == 0):
 		print(steps, len(work))
+	visited.update(work)
+	if steps % 2 == parity:
+		parity_visited.update(work)
 	new_work = set()
 	for p in work:
 		new_work.update(scan(plot, sz, p))
-	work = new_work
+	work = set(filter(lambda pp: not pp in visited, new_work))
 	steps -= 1
 
-print(len(work))
+parity_visited.update(work)
+print(len(parity_visited))
