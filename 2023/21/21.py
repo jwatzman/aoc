@@ -26,6 +26,28 @@ class LRUSet:
 		for v in vs:
 			self.add(v)
 
+class GenerationSet:
+	def __init__(self, capacity):
+		self.s1 = set()
+		self.s2 = set()
+		self.capacity = capacity
+
+	def has(self, v):
+		return v in self.s1 or v in self.s2
+
+	def chk(self):
+		if (len(self.s1) > self.capacity):
+			self.s2 = self.s1
+			self.s1 = set()
+
+	def add(self, v):
+		self.s1.add(v)
+		self.chk()
+
+	def update(self, vs):
+		self.s1.update(vs)
+		self.chk()
+
 def mk_next(sz, p):
 	candidates = [
 		(p[0]-1, p[1]),
