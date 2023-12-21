@@ -1,6 +1,30 @@
 #!/usr/bin/env python3
 
+from collections import OrderedDict
 import sys
+
+# https://www.geeksforgeeks.org/lru-cache-in-python-using-ordereddict/
+class LRUSet:
+	def __init__(self, capacity):
+		self.s = OrderedDict()
+		self.capacity = capacity
+
+	def has(self, v):
+		if v in self.s:
+			self.s.move_to_end(v)
+			return True
+		else:
+			return False
+
+	def add(self, v):
+		self.s[v] = True
+		self.s.move_to_end(v)
+		if len(self.s) > self.capacity:
+			self.s.popitem(False)
+
+	def update(self, vs):
+		for v in vs:
+			self.add(v)
 
 def mk_next(sz, p):
 	candidates = [
