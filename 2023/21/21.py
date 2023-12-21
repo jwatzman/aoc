@@ -16,16 +16,9 @@ def mk_next(sz, p):
 def get_plot(plot, sz, p):
 	return plot[p[0] % sz[0]][p[1] % sz[1]]
 
-def scan(plot, sz, visited, reachable, steps, p):
-	if (p, steps) in visited:
-		return
-	visited.add((p, steps))
+def scan(plot, sz, p):
 	nxt = mk_next(sz, p)
-	if steps == 0:
-		reachable.add(p)
-	else:
-		for nxt_p in filter(lambda pp: get_plot(plot, sz, pp) != "#", nxt):
-			scan(plot, sz, visited, reachable, steps - 1, nxt_p)
+	return filter(lambda pp: get_plot(plot, sz, pp) != "#", nxt)
 
 f = open(sys.argv[1], "r")
 plot = list(map(lambda l: l.strip(), f.readlines()))
@@ -39,7 +32,16 @@ for row in range(len(plot)):
 assert start != None
 assert get_plot(plot, sz, start) == "S"
 
-visited = set()
-reachable = set()
-scan(plot, sz, visited, reachable, int(sys.argv[2]), start)
-print(len(reachable))
+steps = int(sys.argv[2])
+work = set()
+work.add(start)
+while steps > 0:
+	if (steps % 100 == 0):
+		print(steps, len(work))
+	new_work = set()
+	for p in work:
+		new_work.update(scan(plot, sz, p))
+	work = new_work
+	steps -= 1
+
+print(len(work))
