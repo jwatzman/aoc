@@ -6,22 +6,12 @@ sys.setrecursionlimit(10000)
 
 f = open(sys.argv[1], "r")
 maze = list(map(lambda l: l.strip(), f.readlines()))
-prevs = dict()
 
 START = (0, 1)
 DEST = (len(maze) - 1, len(maze[0]) - 2)
 
 def get_maze(p):
 	return maze[p[0]][p[1]]
-
-def pathback(p):
-	cur = p
-	path = set()
-	while cur != START:
-		cur = prevs[cur]
-		assert (not (cur in path))
-		path.add(cur)
-	return path
 
 def succ(p, prev):
 	if p == DEST:
@@ -36,54 +26,27 @@ def succ(p, prev):
 	]
 	return list(filter(lambda pp: pp != prev and get_maze(pp) != "#", candidates))
 
-"""
-def explore(p, prev):
-	if p in prevs:
-		best = pathback(p)
-		mine = pathback(prev)
-		#if prev not in best:
-		#if p not in best:
-		if p not in mine:
-			if len(mine) + 1 > len(best):
-				print("UPDATING", p, prevs[p], prev)
-				prevs[p] = prev
-			else:
-				print("not long enough", len(mine), len(best), p)
-		else:
-			print("loop avoided", p)
-		#pathback(p)
-	else:
-		print("SETTING ", p, prev)
-		prevs[p] = prev
-		#pathback(p)
-		for pp in succ(p, prev):
-			explore(pp, p)
-"""
+def findpath(p, prev, path):
+	if p == DEST:
+		return (0, path)
+	new_path = path.copy()
+	new_path.append(p)
+	best = (-100, None)
+	succs = succ(p, prev)
+	if len(succs) > 1:
+		print(p)
+	for pp in succs:
+		if pp not in path:
+			maybe = findpath(pp, p, new_path)
+			if maybe[0] + 1 > best[0]:
+				best = (maybe[0] + 1, maybe[1])
+	return best
 
-"""
-def explore():
-	todo = [(START, None)]
-	while len(todo) > 0:
-		new_todo = []
-		for p, prev in todo:
-			if p in prevs:
-				best = pathback(p)
-				mine = pathback(prev)
-				if p not in mine:
-					assert len(mine) + 1 >= len(best)
-					prevs[p] = prev
-			else:
-				prevs[p] = prev
-				for pp in succ(p, prev):
-					new_todo.append((pp, p))
-		todo = new_todo
-"""
-
-explore()
+dist, path = findpath(START, None, [])
 print("***")
 
-pb = pathback(DEST)
-print(len(pb))
+print(dist)
+pb = set(path)
 for row in range(len(maze)):
 	for col in range(len(maze[row])):
 		if (row, col) in pb:
