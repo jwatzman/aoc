@@ -14,55 +14,80 @@ DEST = (len(maze) - 1, len(maze[0]) - 2)
 def get_maze(p):
 	return maze[p[0]][p[1]]
 
-def pathlen(p):
+def pathback(p):
 	cur = p
-	l = 0
+	path = set()
 	while cur != START:
-		#assert l < 100
 		cur = prevs[cur]
-		l += 1
-	return l
+		assert (not (cur in path))
+		path.add(cur)
+	return path
 
 def succ(p, prev):
 	if p == DEST:
 		return []
 	tile = get_maze(p)
 	row, col = p
-	if tile == ">":
-		return [(row, col + 1)]
-	elif tile == "<":
-		return [(row, col - 1)]
-	elif tile == "v":
-		return [(row + 1, col)]
-	elif tile == "^":
-		return [(row - 1, col)]
-	else:
-		assert tile == "."
-		candidates = [
-			((row, col + 1), ">"),
-			((row, col - 1), "<"),
-			((row + 1, col), "v"),
-			((row - 1, col), "^"),
-		]
-		res = []
-		for pp, allowed_tile in candidates:
-			if pp == prev:
-				continue
-			tt = get_maze(pp)
-			if tt == "." or tt == allowed_tile:
-				res.append(pp)
-		return res
+	candidates = [
+		(row, col + 1),
+		(row, col - 1),
+		(row + 1, col),
+		(row - 1, col),
+	]
+	return list(filter(lambda pp: pp != prev and get_maze(pp) != "#", candidates))
 
+"""
 def explore(p, prev):
 	if p in prevs:
-		best = pathlen(p)
-		mine = pathlen(prev) + 1
-		if mine > best:
-			prevs[p] = prev
+		best = pathback(p)
+		mine = pathback(prev)
+		#if prev not in best:
+		#if p not in best:
+		if p not in mine:
+			if len(mine) + 1 > len(best):
+				print("UPDATING", p, prevs[p], prev)
+				prevs[p] = prev
+			else:
+				print("not long enough", len(mine), len(best), p)
+		else:
+			print("loop avoided", p)
+		#pathback(p)
 	else:
+		print("SETTING ", p, prev)
 		prevs[p] = prev
+		#pathback(p)
 		for pp in succ(p, prev):
 			explore(pp, p)
+"""
 
-explore(START, None)
-print(pathlen(DEST))
+"""
+def explore():
+	todo = [(START, None)]
+	while len(todo) > 0:
+		new_todo = []
+		for p, prev in todo:
+			if p in prevs:
+				best = pathback(p)
+				mine = pathback(prev)
+				if p not in mine:
+					assert len(mine) + 1 >= len(best)
+					prevs[p] = prev
+			else:
+				prevs[p] = prev
+				for pp in succ(p, prev):
+					new_todo.append((pp, p))
+		todo = new_todo
+"""
+
+explore()
+print("***")
+
+pb = pathback(DEST)
+print(len(pb))
+for row in range(len(maze)):
+	for col in range(len(maze[row])):
+		if (row, col) in pb:
+			print("O", end="")
+		else:
+			print(maze[row][col], end="")
+	print()
