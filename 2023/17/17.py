@@ -50,9 +50,10 @@ def succ(s):
 	d0 = s.direction
 	d1 = (-d0[1], d0[0])
 	d2 = (d0[1], -d0[0])
-	res.append(State(add_pos(p0, d1), d1, 1))
-	res.append(State(add_pos(p0, d2), d2, 1))
-	if (s.consecutive < 3):
+	if (s.consecutive >= 4):
+		res.append(State(add_pos(p0, d1), d1, 1))
+		res.append(State(add_pos(p0, d2), d2, 1))
+	if (s.consecutive < 10):
 		res.append(State(add_pos(p0, d0), d0, s.consecutive + 1))
 	return res
 
@@ -67,7 +68,7 @@ q.add_task(State((0,0), (0,1), 0), 0)
 q.add_task(State((0,0), (1,0), 0), 0)
 while True:
 	(cur_heat, cur_state) = q.pop_task()
-	if cur_state.pos[0] == NROWS - 1 and cur_state.pos[1] == NCOLS - 1:
+	if cur_state.pos[0] == NROWS - 1 and cur_state.pos[1] == NCOLS - 1 and cur_state.consecutive >= 4:
 		print(cur_heat)
 		sys.exit(0)
 	visited.add(cur_state)
