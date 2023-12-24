@@ -18,7 +18,7 @@ def read_points():
 		r.append(parse_point(line))
 	return r
 
-points = read_points()
+points = read_points()[:5]
 
 eqns = []
 vars = ["x", "y", "z", "vx", "vy", "vz"]
