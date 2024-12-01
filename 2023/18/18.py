@@ -50,7 +50,7 @@ def scan_all(tpl):
 	tot = 0
 	for row in range(minrow, maxrow+1):
 		if row % 100 == 0:
-			print(row / maxrow * 100)
+			print((row - minrow) / (maxrow - minrow) * 100)
 		wall_from_above = None
 		wall_thickness = 0
 		in_trench = False
