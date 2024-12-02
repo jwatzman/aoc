@@ -1,2 +1,4 @@
 *.swp
-**/target
+target
+input
+example.txt
