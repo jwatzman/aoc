@@ -53,6 +53,22 @@ fn report_safe(report: &Vec<i32>) -> bool {
     return true;
 }
 
+fn report_safe_with_dampner(report: &Vec<i32>) -> bool {
+    if report_safe(&report) {
+        return true;
+    }
+
+    for (idx, _level) in report.iter().enumerate() {
+        let mut dampened_report = report.clone();
+        dampened_report.remove(idx);
+        if report_safe(&dampened_report) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let filename = &args[1];
@@ -61,7 +77,7 @@ fn main() {
     let reports = parse(&contents);
     let mut res = 0;
     for report in reports {
-        if report_safe(&report) {
+        if report_safe_with_dampner(&report) {
             res += 1;
         }
     }
