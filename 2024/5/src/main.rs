@@ -54,23 +54,17 @@ fn is_rule_followed(update: &Vec<u8>, rule: &(u8, u8)) -> bool {
     return true;
 }
 
-fn tsort(
-    r: &mut Vec<u8>,
-    items: &HashSet<u8>,
-    deps: &HashMap<u8, HashSet<u8>>,
-    done: &mut HashSet<u8>,
-    todo: &HashSet<u8>,
-) {
-    for t in todo {
-        if done.contains(t) {
-            continue;
-        }
-        done.insert(*t);
-        tsort(r, items, deps, done, deps.get(t).unwrap_or(&HashSet::new()));
-        if items.contains(t) {
-            r.push(*t);
-        }
+fn tsort(r: &mut Vec<u8>, item: &u8, deps: &HashMap<u8, HashSet<u8>>, done: &mut HashSet<u8>) {
+    if done.contains(&item) {
+        return;
     }
+
+    for dep in deps.get(item).unwrap_or(&HashSet::new()) {
+        tsort(r, dep, deps, done);
+    }
+
+    r.push(*item);
+    done.insert(*item);
 }
 
 fn main() {
@@ -84,27 +78,25 @@ fn main() {
         }
     }
 
-    let deps = make_deps(&rules);
-
     let mut res: u32 = 0;
     for bad in bad_updates {
-        let mut fixed_update = Vec::new();
-        let items: HashSet<u8> = bad.iter().cloned().collect();
-        tsort(
-            &mut fixed_update,
-            &items,
-            &deps,
-            &mut HashSet::new(),
-            &items,
+        let bad_set: HashSet<u8> = bad.iter().cloned().collect();
+        let deps = make_deps(
+            &rules
+                .iter()
+                .cloned()
+                .filter(|r| bad_set.contains(&r.0) && bad_set.contains(&r.1))
+                .collect(),
         );
+        let mut fixed_update = Vec::new();
+        let mut done = HashSet::new();
+        for item in &bad_set {
+            tsort(&mut fixed_update, item, &deps, &mut done);
+        }
+
         let mid: u32 = fixed_update[fixed_update.len() / 2].into();
         res += mid;
 
-        /*
-        if !rules.iter().all(|rule| is_rule_followed(update, rule)) {
-            dbg!(bad, fixed)
-        }
-        */
         for rule in &rules {
             if !is_rule_followed(&fixed_update, rule) {
                 dbg!(bad, &fixed_update, rule);
