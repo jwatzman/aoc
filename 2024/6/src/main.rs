@@ -68,6 +68,19 @@ fn step(lab: &Lab, mut guard: Guard) -> Option<Guard> {
     return Some(guard);
 }
 
+fn init_steps(lab: &Lab, guard: &Guard) -> HashSet<(i16, i16)> {
+    let mut guard = guard.clone();
+    let mut all_pos = HashSet::new();
+
+    loop {
+        all_pos.insert(guard.pos);
+        match step(&lab, guard) {
+            None => return all_pos,
+            Some(new_guard) => guard = new_guard,
+        }
+    }
+}
+
 fn does_loop(lab: &Lab, guard: &Guard) -> bool {
     let mut guard = guard.clone();
     let mut all_pos = HashSet::new();
@@ -90,20 +103,16 @@ fn main() {
     let (lab, guard) = parse_input(fs::read_to_string(&args[1]).unwrap());
 
     let mut r = 0;
-    for row in 0..(lab.max.0 + 1) {
-        for col in 0..(lab.max.1 + 1) {
-            let p = (row, col);
-            if lab.obstructions.contains(&p) || p == guard.pos {
-                continue;
-            }
-
-            let mut new_lab = lab.clone();
-            new_lab.obstructions.insert(p);
-            if does_loop(&new_lab, &guard) {
-                r += 1;
-            }
+    for p in init_steps(&lab, &guard) {
+        if lab.obstructions.contains(&p) || p == guard.pos {
+            continue;
         }
-        println!("({row})");
+
+        let mut new_lab = lab.clone();
+        new_lab.obstructions.insert(p);
+        if does_loop(&new_lab, &guard) {
+            r += 1;
+        }
     }
 
     println!("{r}");
