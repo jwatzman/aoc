@@ -2,13 +2,13 @@ use std::collections::HashSet;
 use std::env;
 use std::fs;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Lab {
     obstructions: HashSet<(i16, i16)>,
     max: (i16, i16),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 struct Guard {
     pos: (i16, i16),
     dir: (i16, i16),
@@ -68,35 +68,43 @@ fn step(lab: &Lab, mut guard: Guard) -> Option<Guard> {
     return Some(guard);
 }
 
-fn main() {
-    let args: Vec<_> = env::args().collect();
-    let (lab, mut guard) = parse_input(fs::read_to_string(&args[1]).unwrap());
-
+fn does_loop(lab: &Lab, guard: &Guard) -> bool {
+    let mut guard = guard.clone();
     let mut all_pos = HashSet::new();
+
     loop {
-        all_pos.insert(guard.pos);
+        if all_pos.contains(&guard) {
+            return true;
+        }
+
+        all_pos.insert(guard.clone());
         match step(&lab, guard) {
-            None => break,
+            None => return false,
             Some(new_guard) => guard = new_guard,
         }
     }
+}
 
-    /*
+fn main() {
+    let args: Vec<_> = env::args().collect();
+    let (lab, guard) = parse_input(fs::read_to_string(&args[1]).unwrap());
+
+    let mut r = 0;
     for row in 0..(lab.max.0 + 1) {
         for col in 0..(lab.max.1 + 1) {
             let p = (row, col);
-            if lab.obstructions.contains(&p) {
-                print!("#");
-            } else if all_pos.contains(&p) {
-                print!("X");
-            } else {
-                print!(".");
+            if lab.obstructions.contains(&p) || p == guard.pos {
+                continue;
+            }
+
+            let mut new_lab = lab.clone();
+            new_lab.obstructions.insert(p);
+            if does_loop(&new_lab, &guard) {
+                r += 1;
             }
         }
-        print!("\n")
+        println!("({row})");
     }
-    */
 
-    let r = all_pos.len();
     println!("{r}");
 }
