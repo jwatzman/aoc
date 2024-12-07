@@ -47,6 +47,14 @@ fn try_solve(val: i64, nums: &[i64]) -> bool {
         }
     }
 
+    let digits = n.ilog10() + 1;
+    let adj = 10_i64.checked_pow(digits).unwrap();
+    if val % adj == n {
+        if try_solve(val / adj, rest) {
+            return true;
+        }
+    }
+
     return false;
 }
 
