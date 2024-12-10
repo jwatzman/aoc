@@ -5,6 +5,7 @@ use std::ops::Add;
 
 type RC = i8;
 type Ht = i8;
+type Topo = Vec<Vec<Ht>>;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 struct Pt {
@@ -39,7 +40,7 @@ const DELTAS: [Pt; 4] = [
     Pt { row: 0, col: 1 },
 ];
 
-fn parse_input(contents: String) -> (Vec<Vec<Ht>>, HashSet<Pt>) {
+fn parse_input(contents: String) -> (Topo, HashSet<Pt>) {
     let mut topo = Vec::new();
     let mut heads = HashSet::new();
 
@@ -68,10 +69,27 @@ fn parse_input(contents: String) -> (Vec<Vec<Ht>>, HashSet<Pt>) {
     return (topo, heads);
 }
 
-fn try_get(topo: &Vec<Vec<i8>>, pt: &Pt) -> Option<Ht> {
+fn try_get(topo: &Topo, pt: &Pt) -> Option<Ht> {
     let row = Result::ok(usize::try_from(pt.row))?;
     let col = Result::ok(usize::try_from(pt.col))?;
     return Some(*topo.get(row)?.get(col)?);
+}
+
+fn wander(topo: &Topo, start: &Pt, level: Ht) -> u64 {
+    if level == 10 {
+        return 1;
+    }
+
+    let mut subscore = 0;
+    for d in &DELTAS {
+        let new_pt = start + d;
+        match try_get(topo, &new_pt) {
+            Some(h) if h == level => subscore += wander(topo, &new_pt, level + 1),
+            _ => (),
+        }
+    }
+
+    return subscore;
 }
 
 fn main() {
@@ -80,25 +98,7 @@ fn main() {
 
     let mut score = 0;
     for head in heads {
-        let mut todo = HashSet::from([head]);
-        for level in 1..10 {
-            let mut new_todo = HashSet::new();
-            for pt in &todo {
-                for d in &DELTAS {
-                    let new_pt = pt + d;
-                    let h = match try_get(&topo, &new_pt) {
-                        Some(h) => h,
-                        None => continue,
-                    };
-                    if h == level {
-                        new_todo.insert(new_pt);
-                    }
-                }
-            }
-            todo = new_todo;
-        }
-
-        score += todo.len();
+        score += wander(&topo, &head, 1);
     }
 
     println!("{score}");
