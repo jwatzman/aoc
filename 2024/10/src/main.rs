@@ -39,10 +39,9 @@ const DELTAS: [Pt; 4] = [
     Pt { row: 0, col: 1 },
 ];
 
-fn parse_input(contents: String) -> (Vec<Vec<Ht>>, HashSet<Pt>, Pt) {
+fn parse_input(contents: String) -> (Vec<Vec<Ht>>, HashSet<Pt>) {
     let mut topo = Vec::new();
     let mut heads = HashSet::new();
-    let mut max = Pt { row: 0, col: 0 };
 
     for (row, l) in contents.split('\n').enumerate() {
         if l.len() == 0 {
@@ -59,32 +58,25 @@ fn parse_input(contents: String) -> (Vec<Vec<Ht>>, HashSet<Pt>, Pt) {
                 col: col.try_into().unwrap(),
             };
             if h == 0 {
-                heads.insert(p.clone());
+                heads.insert(p);
             }
-            max = p;
         }
 
         topo.push(row_vec);
     }
 
-    return (topo, heads, max);
+    return (topo, heads);
 }
 
-/*
-fn maybe_get(topo: &Vec<Vec<i8>>, pt: &Pt) -> Option<Ht> {
-    if pt.row < 0 || pt.col < 0 {
-        return None;
-    }
-
-    let row: Option<&[Ht]> = topo.get(pt.row.into());
-    let ht: &Ht = row?.get(pt.col.into())?;
-    return Some(*ht);
+fn try_get(topo: &Vec<Vec<i8>>, pt: &Pt) -> Option<Ht> {
+    let row = Result::ok(usize::try_from(pt.row))?;
+    let col = Result::ok(usize::try_from(pt.col))?;
+    return Some(*topo.get(row)?.get(col)?);
 }
-*/
 
 fn main() {
     let args: Vec<_> = env::args().collect();
-    let (topo, heads, max) = parse_input(fs::read_to_string(&args[1]).unwrap());
+    let (topo, heads) = parse_input(fs::read_to_string(&args[1]).unwrap());
 
     let mut score = 0;
     for head in heads {
@@ -94,16 +86,10 @@ fn main() {
             for pt in &todo {
                 for d in &DELTAS {
                     let new_pt = pt + d;
-                    if new_pt.row < 0
-                        || new_pt.col < 0
-                        || new_pt.row > max.row
-                        || new_pt.col > max.col
-                    {
-                        continue;
-                    }
-
-                    let h = topo[usize::try_from(new_pt.row).unwrap()]
-                        [usize::try_from(new_pt.col).unwrap()];
+                    let h = match try_get(&topo, &new_pt) {
+                        Some(h) => h,
+                        None => continue,
+                    };
                     if h == level {
                         new_todo.insert(new_pt);
                     }
