@@ -1,7 +1,8 @@
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Stone(u64);
 
 impl Stone {
@@ -24,6 +25,26 @@ impl Stone {
     }
 }
 
+fn evolve(memo: &mut HashMap<(Stone, u64), u64>, depth: u64, stone: Stone) -> u64 {
+    if depth == 0 {
+        return 1;
+    }
+
+    let k = (stone.clone(), depth);
+    if let Some(n) = memo.get(&k) {
+        return *n;
+    }
+
+    let n = stone
+        .blink()
+        .into_iter()
+        .map(|s| evolve(memo, depth - 1, s))
+        .sum();
+
+    memo.insert(k, n);
+    return n;
+}
+
 fn parse_input(contents: String) -> Vec<Stone> {
     let mut r = Vec::new();
 
@@ -40,41 +61,9 @@ fn parse_input(contents: String) -> Vec<Stone> {
 
 fn main() {
     let args: Vec<_> = env::args().collect();
-    let mut stones = parse_input(fs::read_to_string(&args[1]).unwrap());
+    let stones = parse_input(fs::read_to_string(&args[1]).unwrap());
 
-    /*
-    let it = stones.into_iter();
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    let it = it.flat_map(|s| s.blink());
-    */
-
-    for _ in 0..25 {
-        stones = stones.into_iter().flat_map(|s| s.blink()).collect();
-    }
-
-    let n = stones.len();
+    let mut memo = HashMap::new();
+    let n: u64 = stones.into_iter().map(|s| evolve(&mut memo, 75, s)).sum();
     println!("{n}");
 }
