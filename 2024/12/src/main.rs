@@ -113,6 +113,7 @@ fn find_area(start: &Pt, garden: &Garden, seen: &mut HashSet<Pt>) -> HashSet<Pt>
     return area;
 }
 
+/*
 fn right_hand_find_start(area: &HashSet<Pt>, d: &Pt) -> Option<Pt> {
     let mut cur = area.iter().next()?.clone();
     loop {
@@ -123,20 +124,19 @@ fn right_hand_find_start(area: &HashSet<Pt>, d: &Pt) -> Option<Pt> {
         cur = next;
     }
 }
+*/
 
-fn right_hand(area: &HashSet<Pt>) -> usize {
-    let start_scan_dir = Pt { row: -1, col: 0 };
-    let start = match right_hand_find_start(area, &start_scan_dir) {
-        Some(pt) => pt,
-        None => return 0,
-    };
-    let start_dir = start_scan_dir.rot_left();
+const UP: Pt = Pt { row: -1, col: 0 };
+
+fn right_hand(area: &HashSet<Pt>, start: &Pt, seen: &mut HashSet<Pt>) -> usize {
+    let start_dir = UP.rot_left();
 
     let mut r = 0;
     let mut cur = start.clone();
     let mut cur_dir = start_dir.clone();
 
     loop {
+        seen.insert(cur.clone());
         let dir_right = cur_dir.rot_right();
         let right = &cur + &dir_right;
 
@@ -153,11 +153,31 @@ fn right_hand(area: &HashSet<Pt>) -> usize {
             cur_dir = cur_dir.rot_left();
         }
 
-        if cur == start && cur_dir == start_dir {
+        if cur == *start && cur_dir == start_dir {
             break;
         }
     }
 
+    return r;
+}
+
+fn right_hand_all(area: &HashSet<Pt>) -> usize {
+    let mut r = 0;
+    let mut seen = HashSet::new();
+    for pt in area {
+        let mut start = pt.clone();
+        loop {
+            let next = &start + &UP;
+            if !area.contains(&next) {
+                break;
+            }
+            start = next;
+        }
+        if !seen.contains(&start) {
+            r += right_hand(area, &start, &mut seen);
+        }
+    }
+    dbg!(&r);
     return r;
 }
 
@@ -178,7 +198,7 @@ fn main() {
             };
 
             let area = find_area(&pt, &garden, &mut seen);
-            let perim = right_hand(&area);
+            let perim = right_hand_all(&area);
             let cost = area.len() * perim;
             r += cost;
         }
