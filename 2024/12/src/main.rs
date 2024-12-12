@@ -12,6 +12,22 @@ struct Pt {
     col: RC,
 }
 
+impl Pt {
+    fn rot_left(&self) -> Pt {
+        return Pt {
+            row: -self.col,
+            col: self.row,
+        };
+    }
+
+    fn rot_right(&self) -> Pt {
+        return Pt {
+            row: self.col,
+            col: -self.row,
+        };
+    }
+}
+
 impl Add for Pt {
     type Output = Pt;
     fn add(self, other: Pt) -> Pt {
@@ -108,31 +124,37 @@ fn right_hand_find_start(area: &HashSet<Pt>, d: &Pt) -> Option<Pt> {
     }
 }
 
-fn rot_left(pt: &Pt) -> Pt {
-    return Pt {
-        row: -pt.col,
-        col: pt.row,
-    };
-}
-
 fn right_hand(area: &HashSet<Pt>) -> usize {
-    let start_dir = Pt { row: -1, col: 0 };
-    let start = match right_hand_find_start(area, &start_dir) {
+    let start_scan_dir = Pt { row: -1, col: 0 };
+    let start = match right_hand_find_start(area, &start_scan_dir) {
         Some(pt) => pt,
         None => return 0,
     };
+    let start_dir = start_scan_dir.rot_left();
 
-    let mut r = 1;
+    let mut r = 0;
     let mut cur = start.clone();
-    let mut cur_dir = rot_left(&start_dir);
+    let mut cur_dir = start_dir.clone();
 
-    while cur != start || cur_dir != start_dir {
-        let next = &cur + &cur_dir;
-        if area.contains(&next) {
-            cur = next;
+    loop {
+        let dir_right = cur_dir.rot_right();
+        let right = &cur + &dir_right;
+
+        let forward = &cur + &cur_dir;
+
+        if area.contains(&right) {
+            r += 1;
+            cur_dir = dir_right;
+            cur = right;
+        } else if area.contains(&forward) {
+            cur = forward;
         } else {
             r += 1;
-            cur_dir = rot_left(&cur_dir);
+            cur_dir = cur_dir.rot_left();
+        }
+
+        if cur == start && cur_dir == start_dir {
+            break;
         }
     }
 
@@ -144,7 +166,7 @@ fn main() {
     let garden = parse_input(fs::read_to_string(&args[1]).unwrap());
 
     let mut seen = HashSet::new();
-    let mut r = 0_u64;
+    let mut r = 0;
 
     let max_row = garden.len();
     let max_col = garden[0].len();
@@ -157,10 +179,8 @@ fn main() {
 
             let area = find_area(&pt, &garden, &mut seen);
             let perim = right_hand(&area);
-            dbg!(&perim);
-            return;
-            //let cost: u64 = (area * perim).into();
-            //r += cost;
+            let cost = area.len() * perim;
+            r += cost;
         }
     }
 
