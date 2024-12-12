@@ -113,30 +113,18 @@ fn find_area(start: &Pt, garden: &Garden, seen: &mut HashSet<Pt>) -> HashSet<Pt>
     return area;
 }
 
-/*
-fn right_hand_find_start(area: &HashSet<Pt>, d: &Pt) -> Option<Pt> {
-    let mut cur = area.iter().next()?.clone();
-    loop {
-        let next = &cur + d;
-        if !area.contains(&next) {
-            return Some(cur);
-        }
-        cur = next;
-    }
-}
-*/
-
 const UP: Pt = Pt { row: -1, col: 0 };
+const LEFT: Pt = Pt { row: 0, col: -1 };
 
 fn right_hand(area: &HashSet<Pt>, start: &Pt, seen: &mut HashSet<Pt>) -> usize {
-    let start_dir = UP.rot_left();
-
     let mut r = 0;
     let mut cur = start.clone();
-    let mut cur_dir = start_dir.clone();
+    let mut cur_dir = LEFT;
 
     loop {
-        seen.insert(cur.clone());
+        if cur_dir == LEFT {
+            seen.insert(cur.clone());
+        }
         let dir_right = cur_dir.rot_right();
         let right = &cur + &dir_right;
 
@@ -153,7 +141,7 @@ fn right_hand(area: &HashSet<Pt>, start: &Pt, seen: &mut HashSet<Pt>) -> usize {
             cur_dir = cur_dir.rot_left();
         }
 
-        if cur == *start && cur_dir == start_dir {
+        if cur == *start && cur_dir == LEFT {
             break;
         }
     }
@@ -177,7 +165,6 @@ fn right_hand_all(area: &HashSet<Pt>) -> usize {
             r += right_hand(area, &start, &mut seen);
         }
     }
-    dbg!(&r);
     return r;
 }
 
