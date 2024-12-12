@@ -62,16 +62,15 @@ fn parse_input(contents: String) -> Garden {
     return garden;
 }
 
-fn scan(start: &Pt, garden: &Garden, seen: &mut HashSet<Pt>) -> (u16, u16) {
+fn find_area(start: &Pt, garden: &Garden, seen: &mut HashSet<Pt>) -> HashSet<Pt> {
     if seen.contains(start) {
-        return (0, 0);
+        return HashSet::new();
     }
     seen.insert(start.clone());
 
     let flower = try_get(garden, start).unwrap();
-    let mut area = 0;
-    let mut perim = 0;
 
+    let mut area = HashSet::new();
     let mut todo = HashSet::new();
     todo.insert(start.clone());
 
@@ -79,17 +78,13 @@ fn scan(start: &Pt, garden: &Garden, seen: &mut HashSet<Pt>) -> (u16, u16) {
         let i = todo.into_iter();
         todo = HashSet::new();
         for pt in i {
-            area += 1;
-            perim += 4;
-
+            area.insert(pt.clone());
             for delta in &DELTAS {
                 let new_pt = &pt + delta;
                 match try_get(garden, &new_pt) {
                     Some(f) if f == flower => (),
                     _ => continue,
                 };
-
-                perim -= 1;
 
                 if !seen.contains(&new_pt) {
                     seen.insert(new_pt.clone());
@@ -99,7 +94,49 @@ fn scan(start: &Pt, garden: &Garden, seen: &mut HashSet<Pt>) -> (u16, u16) {
         }
     }
 
-    return (area, perim);
+    return area;
+}
+
+fn right_hand_find_start(area: &HashSet<Pt>, d: &Pt) -> Option<Pt> {
+    let mut cur = area.iter().next()?.clone();
+    loop {
+        let next = &cur + d;
+        if !area.contains(&next) {
+            return Some(cur);
+        }
+        cur = next;
+    }
+}
+
+fn rot_left(pt: &Pt) -> Pt {
+    return Pt {
+        row: -pt.col,
+        col: pt.row,
+    };
+}
+
+fn right_hand(area: &HashSet<Pt>) -> usize {
+    let start_dir = Pt { row: -1, col: 0 };
+    let start = match right_hand_find_start(area, &start_dir) {
+        Some(pt) => pt,
+        None => return 0,
+    };
+
+    let mut r = 1;
+    let mut cur = start.clone();
+    let mut cur_dir = rot_left(&start_dir);
+
+    while cur != start || cur_dir != start_dir {
+        let next = &cur + &cur_dir;
+        if area.contains(&next) {
+            cur = next;
+        } else {
+            r += 1;
+            cur_dir = rot_left(&cur_dir);
+        }
+    }
+
+    return r;
 }
 
 fn main() {
@@ -118,9 +155,12 @@ fn main() {
                 col: RC::try_from(col).unwrap(),
             };
 
-            let (area, perim) = scan(&pt, &garden, &mut seen);
-            let cost: u64 = (area * perim).into();
-            r += cost;
+            let area = find_area(&pt, &garden, &mut seen);
+            let perim = right_hand(&area);
+            dbg!(&perim);
+            return;
+            //let cost: u64 = (area * perim).into();
+            //r += cost;
         }
     }
 
