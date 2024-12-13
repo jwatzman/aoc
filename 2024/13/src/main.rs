@@ -2,10 +2,12 @@ use regex::Regex;
 use std::env;
 use std::fs;
 
+type NN = u32;
+
 #[derive(Debug)]
 struct Axes {
-    x: u32,
-    y: u32,
+    x: NN,
+    y: NN,
 }
 
 #[derive(Debug)]
@@ -57,7 +59,7 @@ fn parse_input(contents: String) -> Vec<Machine> {
 }
 
 const EPS: f64 = 0.00001;
-fn solve(machine: &Machine) -> Option<(u32, u32)> {
+fn solve(machine: &Machine) -> Option<(NN, NN)> {
     let m = nalgebra::Matrix2::new(
         f64::from(machine.a.x),
         f64::from(machine.b.x),
@@ -78,7 +80,7 @@ fn solve(machine: &Machine) -> Option<(u32, u32)> {
         && (a_f.fract() < EPS || 1. - a_f.fract() < EPS)
         && (b_f.fract() < EPS || 1. - b_f.fract() < EPS)
     {
-        return Some((a_f.round() as u32, b_f.round() as u32));
+        return Some((a_f.round() as NN, b_f.round() as NN));
     } else {
         return None;
     }
