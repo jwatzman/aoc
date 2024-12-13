@@ -78,7 +78,7 @@ fn solve(machine: &Machine) -> Option<(u32, u32)> {
         && (a_f.fract() < EPS || 1. - a_f.fract() < EPS)
         && (b_f.fract() < EPS || 1. - b_f.fract() < EPS)
     {
-        return Some((a_f.round() as u32, b_f as u32));
+        return Some((a_f.round() as u32, b_f.round() as u32));
     } else {
         return None;
     }
