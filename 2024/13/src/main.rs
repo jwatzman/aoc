@@ -2,7 +2,7 @@ use regex::Regex;
 use std::env;
 use std::fs;
 
-type NN = u32;
+type NN = u64;
 
 #[derive(Debug)]
 struct Axes {
@@ -15,6 +15,25 @@ struct Machine {
     a: Axes,
     b: Axes,
     prize: Axes,
+}
+
+// https://gist.github.com/victor-iyi/8a84185c1d52419b0d4915a648d5e3e1
+fn gcd(mut n: u64, mut m: u64) -> u64 {
+    if n == 0 {
+        return m;
+    }
+
+    if m == 0 {
+        return n;
+    }
+
+    while m != 0 {
+        if m < n {
+            std::mem::swap(&mut m, &mut n);
+        }
+        m %= n;
+    }
+    return n;
 }
 
 fn parse_input(contents: String) -> Vec<Machine> {
@@ -48,8 +67,8 @@ fn parse_input(contents: String) -> Vec<Machine> {
 
         let captures_prize = re_prize.captures(line_prize).unwrap();
         let prize = Axes {
-            x: captures_prize[1].parse().unwrap(),
-            y: captures_prize[2].parse().unwrap(),
+            x: captures_prize[1].parse::<NN>().unwrap() + 10000000000000,
+            y: captures_prize[2].parse::<NN>().unwrap() + 10000000000000,
         };
 
         r.push(Machine { a, b, prize });
@@ -58,15 +77,27 @@ fn parse_input(contents: String) -> Vec<Machine> {
     return r;
 }
 
+fn fconv(n: NN) -> f64 {
+    //f64::from(u32::try_from(n).unwrap())
+    n as f64
+}
+
 const EPS: f64 = 0.00001;
 fn solve(machine: &Machine) -> Option<(NN, NN)> {
+    let gcd_x = gcd(gcd(machine.a.x, machine.b.x), machine.prize.x);
+    let gcd_y = gcd(gcd(machine.a.y, machine.b.y), machine.prize.y);
+    dbg!(&gcd_x, &gcd_y);
+
     let m = nalgebra::Matrix2::new(
-        f64::from(machine.a.x),
-        f64::from(machine.b.x),
-        f64::from(machine.a.y),
-        f64::from(machine.b.y),
+        fconv(machine.a.x / gcd_x),
+        fconv(machine.b.x / gcd_x),
+        fconv(machine.a.y / gcd_y),
+        fconv(machine.b.y / gcd_y),
     );
-    let v = nalgebra::Vector2::new(f64::from(machine.prize.x), f64::from(machine.prize.y));
+    let v = nalgebra::Vector2::new(
+        fconv(machine.prize.x / gcd_x),
+        fconv(machine.prize.y / gcd_y),
+    );
     let decomp = m.lu();
     let s = decomp.solve(&v).unwrap();
 
@@ -74,9 +105,7 @@ fn solve(machine: &Machine) -> Option<(NN, NN)> {
     let b_f = s[1];
 
     if a_f > -EPS
-        && a_f < 100.
         && b_f > -EPS
-        && b_f < 100.
         && (a_f.fract() < EPS || 1. - a_f.fract() < EPS)
         && (b_f.fract() < EPS || 1. - b_f.fract() < EPS)
     {
