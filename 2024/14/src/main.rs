@@ -83,10 +83,25 @@ impl RemAssign for Pt {
     }
 }
 
+const N_ROWS: RC = 103;
+const N_COLS: RC = 101;
+const EXTENT: Pt = Pt {
+    row: N_ROWS,
+    col: N_COLS,
+};
+const N_STEPS: RC = 100;
+
 #[derive(Debug)]
 struct Robot {
     p: Pt,
     v: Pt,
+}
+
+impl Robot {
+    fn step(&mut self, steps: RC) {
+        self.p += &self.v * steps;
+        self.p %= EXTENT;
+    }
 }
 
 fn parse_input(contents: String) -> Vec<Robot> {
@@ -115,25 +130,12 @@ fn parse_input(contents: String) -> Vec<Robot> {
     return robots;
 }
 
-/*
-const N_ROWS: RC = 7;
-const N_COLS: RC = 11;
-*/
-const N_ROWS: RC = 103;
-const N_COLS: RC = 101;
-const EXTENT: Pt = Pt {
-    row: N_ROWS,
-    col: N_COLS,
-};
-const N_STEPS: RC = 100;
-
 fn main() {
     let args: Vec<_> = env::args().collect();
     let mut robots = parse_input(fs::read_to_string(&args[1]).unwrap());
 
     for robot in robots.iter_mut() {
-        robot.p += &robot.v * N_STEPS;
-        robot.p %= EXTENT;
+        robot.step(N_STEPS);
     }
 
     let mut q1 = Vec::new();
