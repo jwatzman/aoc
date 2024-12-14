@@ -1,5 +1,5 @@
 use regex::Regex;
-use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::ops::Add;
@@ -89,7 +89,6 @@ const EXTENT: Pt = Pt {
     row: N_ROWS,
     col: N_COLS,
 };
-const N_STEPS: RC = 100;
 
 #[derive(Debug)]
 struct Robot {
@@ -134,29 +133,31 @@ fn main() {
     let args: Vec<_> = env::args().collect();
     let mut robots = parse_input(fs::read_to_string(&args[1]).unwrap());
 
-    for robot in robots.iter_mut() {
-        robot.step(N_STEPS);
-    }
-
-    let mut q1 = Vec::new();
-    let mut q2 = Vec::new();
-    let mut q3 = Vec::new();
-    let mut q4 = Vec::new();
-
-    for robot in robots.into_iter() {
-        match (
-            robot.p.row.cmp(&(N_ROWS / 2)),
-            robot.p.col.cmp(&(N_COLS / 2)),
-        ) {
-            (Ordering::Less, Ordering::Less) => q1.push(robot),
-            (Ordering::Less, Ordering::Greater) => q2.push(robot),
-            (Ordering::Greater, Ordering::Less) => q3.push(robot),
-            (Ordering::Greater, Ordering::Greater) => q4.push(robot),
-            (Ordering::Equal, _) => (),
-            (_, Ordering::Equal) => (),
+    let mut tot_steps = 0;
+    loop {
+        let mut ps = HashMap::new();
+        for robot in robots.iter_mut() {
+            robot.step(1);
+            ps.insert(robot.p.clone(), ps.get(&robot.p).unwrap_or(&0) + 1);
         }
-    }
+        tot_steps += 1;
 
-    let safety = q1.len() * q2.len() * q3.len() * q4.len();
-    println!("{safety}");
+        if ps.iter().any(|(_, n)| *n > 1) {
+            continue;
+        }
+
+        println!("{tot_steps}");
+        for row in 0..N_ROWS {
+            for col in 0..N_COLS {
+                match ps.get(&Pt { row, col }) {
+                    None => print!("."),
+                    Some(n) => print!("{n}"),
+                }
+            }
+            print!("\n");
+        }
+
+        print!("\n\n\n");
+        break;
+    }
 }
