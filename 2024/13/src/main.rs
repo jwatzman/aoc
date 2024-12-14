@@ -48,8 +48,8 @@ fn parse_input(contents: String) -> Vec<Machine> {
 
         let captures_prize = re_prize.captures(line_prize).unwrap();
         let prize = Axes {
-            x: captures_prize[1].parse::<NN>().unwrap(), /*+ 10000000000000*/
-            y: captures_prize[2].parse::<NN>().unwrap(), /*+ 10000000000000*/
+            x: captures_prize[1].parse::<NN>().unwrap() + 10000000000000,
+            y: captures_prize[2].parse::<NN>().unwrap() + 10000000000000,
         };
 
         r.push(Machine { a, b, prize });
