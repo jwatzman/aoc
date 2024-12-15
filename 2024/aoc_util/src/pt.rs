@@ -61,6 +61,16 @@ where
     }
 }
 
+impl<T> AddAssign<&Pt<T>> for Pt<T>
+where
+    T: AddAssign + Copy,
+{
+    fn add_assign(&mut self, rhs: &Self) {
+        self.row += rhs.row;
+        self.col += rhs.col;
+    }
+}
+
 impl<T> Mul<T> for Pt<T>
 where
     T: Mul<Output = T> + Copy,
