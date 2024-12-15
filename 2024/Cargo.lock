@@ -18,6 +18,9 @@ version = "0.1.0"
 [[package]]
 name = "aoc10"
 version = "0.1.0"
+dependencies = [
+ "aoc_util",
+]
 
 [[package]]
 name = "aoc11"
@@ -26,6 +29,9 @@ version = "0.1.0"
 [[package]]
 name = "aoc12"
 version = "0.1.0"
+dependencies = [
+ "aoc_util",
+]
 
 [[package]]
 name = "aoc13"
@@ -38,6 +44,7 @@ dependencies = [
 name = "aoc14"
 version = "0.1.0"
 dependencies = [
+ "aoc_util",
  "regex",
 ]
 
@@ -77,6 +84,10 @@ dependencies = [
 
 [[package]]
 name = "aoc9"
+version = "0.1.0"
+
+[[package]]
+name = "aoc_util"
 version = "0.1.0"
 
 [[package]]

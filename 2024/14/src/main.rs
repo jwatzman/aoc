@@ -2,86 +2,9 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
-use std::ops::Add;
-use std::ops::AddAssign;
-use std::ops::Mul;
-use std::ops::Rem;
-use std::ops::RemAssign;
 
 type RC = i16;
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-struct Pt {
-    row: RC,
-    col: RC,
-}
-
-impl Add for Pt {
-    type Output = Pt;
-    fn add(self, rhs: Pt) -> Self::Output {
-        Pt {
-            row: self.row + rhs.row,
-            col: self.col + rhs.col,
-        }
-    }
-}
-
-impl Add for &Pt {
-    type Output = Pt;
-    fn add(self, rhs: &Pt) -> Self::Output {
-        Pt {
-            row: self.row + rhs.row,
-            col: self.col + rhs.col,
-        }
-    }
-}
-
-impl AddAssign for Pt {
-    fn add_assign(&mut self, rhs: Self) {
-        self.row += rhs.row;
-        self.col += rhs.col;
-    }
-}
-
-impl Mul<RC> for Pt {
-    type Output = Pt;
-
-    fn mul(self, rhs: RC) -> Self::Output {
-        Pt {
-            row: self.row * rhs,
-            col: self.col * rhs,
-        }
-    }
-}
-
-impl Mul<RC> for &Pt {
-    type Output = Pt;
-
-    fn mul(self, rhs: RC) -> Self::Output {
-        Pt {
-            row: self.row * rhs,
-            col: self.col * rhs,
-        }
-    }
-}
-
-impl Rem for Pt {
-    type Output = Pt;
-
-    fn rem(self, rhs: Self) -> Self::Output {
-        Pt {
-            row: self.row.rem_euclid(rhs.row),
-            col: self.col.rem_euclid(rhs.col),
-        }
-    }
-}
-
-impl RemAssign for Pt {
-    fn rem_assign(&mut self, rhs: Self) {
-        self.row = self.row.rem_euclid(rhs.row);
-        self.col = self.col.rem_euclid(rhs.col);
-    }
-}
+type Pt = aoc_util::Pt<RC>;
 
 const N_ROWS: RC = 103;
 const N_COLS: RC = 101;

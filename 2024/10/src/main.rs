@@ -1,37 +1,12 @@
+use aoc_util::try_get;
 use std::collections::HashSet;
 use std::env;
 use std::fs;
-use std::ops::Add;
 
 type RC = i8;
+type Pt = aoc_util::Pt<RC>;
 type Ht = i8;
 type Topo = Vec<Vec<Ht>>;
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-struct Pt {
-    row: RC,
-    col: RC,
-}
-
-impl Add for Pt {
-    type Output = Pt;
-    fn add(self, other: Pt) -> Pt {
-        Pt {
-            row: self.row + other.row,
-            col: self.col + other.col,
-        }
-    }
-}
-
-impl Add for &Pt {
-    type Output = Pt;
-    fn add(self, other: &Pt) -> Pt {
-        Pt {
-            row: self.row + other.row,
-            col: self.col + other.col,
-        }
-    }
-}
 
 const DELTAS: [Pt; 4] = [
     Pt { row: -1, col: 0 },
@@ -69,12 +44,6 @@ fn parse_input(contents: String) -> (Topo, HashSet<Pt>) {
     return (topo, heads);
 }
 
-fn try_get(topo: &Topo, pt: &Pt) -> Option<Ht> {
-    let row = Result::ok(usize::try_from(pt.row))?;
-    let col = Result::ok(usize::try_from(pt.col))?;
-    return Some(*topo.get(row)?.get(col)?);
-}
-
 fn wander(topo: &Topo, start: &Pt, level: Ht) -> u64 {
     if level == 10 {
         return 1;
@@ -84,7 +53,7 @@ fn wander(topo: &Topo, start: &Pt, level: Ht) -> u64 {
     for d in &DELTAS {
         let new_pt = start + d;
         match try_get(topo, &new_pt) {
-            Some(h) if h == level => subscore += wander(topo, &new_pt, level + 1),
+            Some(h) if *h == level => subscore += wander(topo, &new_pt, level + 1),
             _ => (),
         }
     }

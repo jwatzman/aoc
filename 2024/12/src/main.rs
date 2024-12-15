@@ -1,58 +1,11 @@
+use aoc_util::try_get;
 use std::collections::HashSet;
 use std::env;
 use std::fs;
-use std::ops::Add;
 
 type RC = i16;
+type Pt = aoc_util::Pt<RC>;
 type Garden = Vec<Vec<char>>;
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-struct Pt {
-    row: RC,
-    col: RC,
-}
-
-impl Pt {
-    fn rot_left(&self) -> Pt {
-        return Pt {
-            row: -self.col,
-            col: self.row,
-        };
-    }
-
-    fn rot_right(&self) -> Pt {
-        return Pt {
-            row: self.col,
-            col: -self.row,
-        };
-    }
-}
-
-impl Add for Pt {
-    type Output = Pt;
-    fn add(self, other: Pt) -> Pt {
-        Pt {
-            row: self.row + other.row,
-            col: self.col + other.col,
-        }
-    }
-}
-
-impl Add for &Pt {
-    type Output = Pt;
-    fn add(self, other: &Pt) -> Pt {
-        Pt {
-            row: self.row + other.row,
-            col: self.col + other.col,
-        }
-    }
-}
-
-fn try_get<T: Copy>(vv: &Vec<Vec<T>>, pt: &Pt) -> Option<T> {
-    let row = Result::ok(usize::try_from(pt.row))?;
-    let col = Result::ok(usize::try_from(pt.col))?;
-    return Some(*vv.get(row)?.get(col)?);
-}
 
 const DELTAS: [Pt; 4] = [
     Pt { row: -1, col: 0 },
