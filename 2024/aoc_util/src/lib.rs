@@ -1,4 +1,4 @@
-mod pt;
+pub mod pt;
 pub use pt::Pt;
 
 pub fn try_get<'a, T, U>(vv: &'a Vec<Vec<T>>, pt: &Pt<U>) -> Option<&'a T>

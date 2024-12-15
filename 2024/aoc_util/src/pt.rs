@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Mul, Neg, Rem, RemAssign, Sub};
+use std::ops::{Add, AddAssign, Mul, Neg, Rem, RemAssign};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Pt<T> {
@@ -89,41 +89,26 @@ where
     }
 }
 
-fn rem_euclid<T>(n: T, rhs: T) -> T
-where
-    T: Rem<Output = T> + Add<Output = T> + Sub<Output = T> + PartialOrd + Copy,
-{
-    let r = n % rhs;
-    let z = r - r; // Eww. Not even correct for floats!
-    if r >= z {
-        return r;
-    } else if rhs >= z {
-        return r + rhs;
-    } else {
-        return r - rhs;
-    }
-}
-
 impl<T> Rem for Pt<T>
 where
-    T: Rem<Output = T> + Add<Output = T> + Sub<Output = T> + PartialOrd + Copy,
+    T: num_traits::Euclid,
 {
     type Output = Pt<T>;
 
     fn rem(self, rhs: Self) -> Self::Output {
         Pt {
-            row: rem_euclid(self.row, rhs.row),
-            col: rem_euclid(self.col, rhs.col),
+            row: self.row.rem_euclid(&rhs.row),
+            col: self.col.rem_euclid(&rhs.col),
         }
     }
 }
 
 impl<T> RemAssign for Pt<T>
 where
-    T: Rem<Output = T> + Add<Output = T> + Sub<Output = T> + PartialOrd + Copy,
+    T: num_traits::Euclid,
 {
     fn rem_assign(&mut self, rhs: Self) {
-        self.row = rem_euclid(self.row, rhs.row);
-        self.col = rem_euclid(self.col, rhs.col);
+        self.row = self.row.rem_euclid(&rhs.row);
+        self.col = self.row.rem_euclid(&rhs.col);
     }
 }
