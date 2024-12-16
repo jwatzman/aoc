@@ -2,6 +2,8 @@ use std::env;
 use std::fmt::Display;
 use std::fs;
 
+use aoc_util::try_get;
+
 type RC = i16;
 type Pt = aoc_util::Pt<RC>;
 
@@ -150,7 +152,51 @@ fn exec_command(warehouse: &mut Warehouse, command: Command) {
             warehouse.robot += delta;
         }
         Command::Up | Command::Down => {
-            todo!();
+            let delta = command.delta();
+            let mut to_explore = vec![&warehouse.robot + &delta];
+            let mut explored = Vec::new();
+
+            while to_explore.len() > 0 {
+                let mut to_explore_next = Vec::new();
+                for pt in to_explore.into_iter() {
+                    let pt_plus_delta = &pt + &delta;
+                    let maybe_lr = match try_get(&warehouse.items, &pt).unwrap() {
+                        Item::Wall => return,
+                        Item::BoxL => Some((
+                            pt_plus_delta.clone(),
+                            &pt_plus_delta + &(Command::Right).delta(),
+                        )),
+                        Item::BoxR => Some((
+                            &pt_plus_delta + &(Command::Left).delta(),
+                            pt_plus_delta.clone(),
+                        )),
+                        Item::Empty => None,
+                    };
+
+                    match maybe_lr {
+                        Some((l, r)) => {
+                            match to_explore_next.last() {
+                                Some(last) if *last == l => (),
+                                _ => to_explore_next.push(l),
+                            };
+
+                            to_explore_next.push(r);
+                        }
+                        None => (),
+                    };
+
+                    explored.push(pt);
+                }
+                to_explore = to_explore_next;
+            }
+
+            let neg_delta = -delta.clone();
+            for pt in explored.into_iter().rev() {
+                *aoc_util::try_get_mut(&mut warehouse.items, &pt).unwrap() =
+                    *aoc_util::try_get(&warehouse.items, &(&pt + &neg_delta)).unwrap();
+            }
+
+            warehouse.robot += delta;
         }
     };
 }
