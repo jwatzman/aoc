@@ -60,3 +60,24 @@ impl Direction {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rot_inverse() {
+        for dir in Direction::ALL {
+            assert_eq!(dir.rot_left().rot_right(), dir);
+            assert_eq!(dir.rot_right().rot_left(), dir);
+        }
+    }
+
+    #[test]
+    fn rot_delta() {
+        for dir in Direction::ALL {
+            assert_eq!(dir.delta::<i8>().rot_left(), dir.rot_left().delta());
+            assert_eq!(dir.delta::<i8>().rot_right(), dir.rot_right().delta());
+        }
+    }
+}
