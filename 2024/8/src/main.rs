@@ -43,33 +43,6 @@ fn parse_input(contents: String) -> City {
     };
 }
 
-// https://gist.github.com/victor-iyi/8a84185c1d52419b0d4915a648d5e3e1
-fn gcd(mut n: i32, mut m: i32) -> i32 {
-    if n == 0 {
-        return m;
-    }
-
-    if m == 0 {
-        return n;
-    }
-
-    if n < 0 {
-        n = -n;
-    }
-
-    if m < 0 {
-        m = -m;
-    }
-
-    while m != 0 {
-        if m < n {
-            std::mem::swap(&mut m, &mut n);
-        }
-        m %= n;
-    }
-    return n;
-}
-
 fn scan_antinodes(city: &City, s: &mut HashSet<Pt>, mut r: i32, mut c: i32, dr: i32, dc: i32) {
     while r >= 0 && c >= 0 && r <= city.max.0 && c <= city.max.1 {
         s.insert((r, c));
@@ -89,7 +62,7 @@ fn find_antinodes(city: &City) -> HashSet<Pt> {
 
             let dr_big = a2.0 - a1.0;
             let dc_big = a2.1 - a1.1;
-            let g = gcd(dr_big, dc_big);
+            let g = aoc_util::gcd(dr_big, dc_big);
             let dr = dr_big / g;
             let dc = dc_big / g;
 

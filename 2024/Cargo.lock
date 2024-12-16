@@ -94,6 +94,7 @@ version = "0.1.0"
 name = "aoc8"
 version = "0.1.0"
 dependencies = [
+ "aoc_util",
  "itertools",
 ]
 
