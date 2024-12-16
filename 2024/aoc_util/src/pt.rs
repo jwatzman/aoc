@@ -157,6 +157,55 @@ where
 {
     fn rem_assign(&mut self, rhs: Self) {
         self.row = self.row.rem_euclid(&rhs.row);
-        self.col = self.row.rem_euclid(&rhs.col);
+        self.col = self.col.rem_euclid(&rhs.col);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn add_and_mul() {
+        let p1 = Pt { row: 3, col: 4 };
+        let p2 = Pt { row: 5, col: 6 };
+
+        let p = p1.clone() + p2.clone();
+        assert_eq!(p.row, 8);
+        assert_eq!(p.col, 10);
+
+        let mut p = p1.clone();
+        p += p2.clone();
+        assert_eq!(p.row, 8);
+        assert_eq!(p.col, 10);
+
+        let p = p1.clone() * 3;
+        assert_eq!(p.row, 9);
+        assert_eq!(p.col, 12);
+    }
+
+    #[test]
+    fn rem() {
+        let p1 = Pt { row: 6, col: -10 };
+
+        let p = p1.clone() % Pt { row: 5, col: 3 };
+        assert_eq!(p.row, 1);
+        assert_eq!(p.col, 2);
+
+        let p = p1.clone() % Pt { row: -5, col: -3 };
+        assert_eq!(p.row, 1);
+        assert_eq!(p.col, 2);
+    }
+
+    #[test]
+    fn try_from() -> Result<(), Box<dyn std::error::Error>> {
+        let p = Pt::<i32>::try_from(3_usize, 4_usize)?;
+        assert_eq!(p.row, 3);
+        assert_eq!(p.col, 4);
+
+        let p = Pt::<i32>::try_from(usize::MAX, 0);
+        assert!(p.is_err());
+
+        Ok(())
     }
 }
