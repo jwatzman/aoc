@@ -25,6 +25,20 @@ where
     }
 }
 
+impl<T> Neg for Pt<T>
+where
+    T: Neg<Output = T>,
+{
+    type Output = Pt<T>;
+
+    fn neg(self) -> Self::Output {
+        Pt {
+            row: -self.row,
+            col: -self.col,
+        }
+    }
+}
+
 impl<T> Add for Pt<T>
 where
     T: Add<Output = T>,

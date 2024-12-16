@@ -126,25 +126,34 @@ fn parse_input(contents: String) -> (Warehouse, Vec<Command>) {
     );
 }
 
-/*
 fn exec_command(warehouse: &mut Warehouse, command: Command) {
-    let delta = command.delta();
-    let robot_dest = &warehouse.robot + &delta;
-    let mut push_dest = robot_dest.clone();
+    match command {
+        Command::Left | Command::Right => {
+            let delta = command.delta();
+            let mut push_dest = &warehouse.robot + &delta;
+            loop {
+                match aoc_util::try_get(&warehouse.items, &push_dest).unwrap() {
+                    Item::Wall => return,
+                    Item::Empty => break,
+                    Item::BoxL | Item::BoxR => push_dest += &delta,
+                };
+            }
 
-    loop {
-        match aoc_util::try_get(&warehouse.items, &push_dest).unwrap() {
-            Item::Wall => return,
-            Item::Empty => break,
-            Item::Box => push_dest += &delta,
+            let neg_delta = -delta.clone();
+            while push_dest != warehouse.robot {
+                let next = &push_dest + &neg_delta;
+                *aoc_util::try_get_mut(&mut warehouse.items, &push_dest).unwrap() =
+                    *aoc_util::try_get(&warehouse.items, &next).unwrap();
+                push_dest = next;
+            }
+
+            warehouse.robot += delta;
         }
-    }
-
-    *aoc_util::try_get_mut(&mut warehouse.items, &push_dest).unwrap() = Item::Box;
-    *aoc_util::try_get_mut(&mut warehouse.items, &robot_dest).unwrap() = Item::Empty;
-    warehouse.robot = robot_dest;
+        Command::Up | Command::Down => {
+            todo!();
+        }
+    };
 }
-*/
 
 fn gps(warehouse: &Warehouse) -> usize {
     let mut r = 0;
@@ -165,13 +174,11 @@ fn main() {
     let (mut warehouse, commands) = parse_input(fs::read_to_string(&args[1]).unwrap());
     println!("{warehouse}");
 
-    /*
     for command in commands {
         exec_command(&mut warehouse, command);
-        //println!("{warehouse}");
+        println!("{warehouse}");
     }
 
     let g = gps(&warehouse);
     println!("{g}");
-    */
 }
