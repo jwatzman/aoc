@@ -154,49 +154,69 @@ fn exec_command(warehouse: &mut Warehouse, command: Command) {
         Command::Up | Command::Down => {
             let delta = command.delta();
             let mut to_explore = vec![&warehouse.robot + &delta];
-            let mut explored = Vec::new();
+            let mut to_copy = Vec::new();
 
             while to_explore.len() > 0 {
                 let mut to_explore_next = Vec::new();
                 for pt in to_explore.into_iter() {
-                    let pt_plus_delta = &pt + &delta;
                     let maybe_lr = match try_get(&warehouse.items, &pt).unwrap() {
                         Item::Wall => return,
-                        Item::BoxL => Some((
-                            pt_plus_delta.clone(),
-                            &pt_plus_delta + &(Command::Right).delta(),
-                        )),
-                        Item::BoxR => Some((
-                            &pt_plus_delta + &(Command::Left).delta(),
-                            pt_plus_delta.clone(),
-                        )),
-                        Item::Empty => None,
+                        Item::BoxL => Some((pt.clone(), &pt + &(Command::Right).delta())),
+                        Item::BoxR => Some((&pt + &(Command::Left).delta(), pt.clone())),
+                        Item::Empty => {
+                            to_copy.push(pt);
+                            None
+                        }
                     };
 
                     match maybe_lr {
                         Some((l, r)) => {
+                            let l_plus_delta = &l + &delta;
+                            let r_plus_delta = &r + &delta;
                             match to_explore_next.last() {
-                                Some(last) if *last == l => (),
-                                _ => to_explore_next.push(l),
+                                // The other side of this block was already on this list, dedup.
+                                Some(last) if *last == r => (),
+                                _ => {
+                                    to_explore_next.push(l_plus_delta);
+                                    to_explore_next.push(r_plus_delta);
+                                    to_copy.push(l);
+                                    to_copy.push(r);
+                                }
                             };
-
-                            to_explore_next.push(r);
                         }
                         None => (),
                     };
-
-                    explored.push(pt);
                 }
                 to_explore = to_explore_next;
             }
 
+            let robot_dest = &warehouse.robot + &delta;
+
             let neg_delta = -delta.clone();
-            for pt in explored.into_iter().rev() {
+            for pt in to_copy.into_iter().rev() {
+                if pt.row == robot_dest.row {
+                    break;
+                }
                 *aoc_util::try_get_mut(&mut warehouse.items, &pt).unwrap() =
                     *aoc_util::try_get(&warehouse.items, &(&pt + &neg_delta)).unwrap();
             }
 
-            warehouse.robot += delta;
+            let maybe_lr = match aoc_util::try_get(&warehouse.items, &robot_dest).unwrap() {
+                Item::Wall => panic!(),
+                Item::BoxL => Some((robot_dest.clone(), &robot_dest + &(Command::Right).delta())),
+                Item::BoxR => Some((&robot_dest + &(Command::Left).delta(), robot_dest.clone())),
+                Item::Empty => None,
+            };
+
+            match maybe_lr {
+                Some((l, r)) => {
+                    *aoc_util::try_get_mut(&mut warehouse.items, &l).unwrap() = Item::Empty;
+                    *aoc_util::try_get_mut(&mut warehouse.items, &r).unwrap() = Item::Empty;
+                }
+                None => (),
+            }
+
+            warehouse.robot = robot_dest;
         }
     };
 }
