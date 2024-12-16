@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::env;
 use std::fmt::Display;
 use std::fs;
@@ -190,33 +191,20 @@ fn exec_command(warehouse: &mut Warehouse, command: Command) {
                 to_explore = to_explore_next;
             }
 
-            let robot_dest = &warehouse.robot + &delta;
-
             let neg_delta = -delta.clone();
+            let to_copy_set: HashSet<_> = to_copy.iter().cloned().collect();
+
             for pt in to_copy.into_iter().rev() {
-                if pt.row == robot_dest.row {
-                    break;
-                }
-                *aoc_util::try_get_mut(&mut warehouse.items, &pt).unwrap() =
-                    *aoc_util::try_get(&warehouse.items, &(&pt + &neg_delta)).unwrap();
+                let src = &pt + &neg_delta;
+                let v = if to_copy_set.contains(&src) {
+                    *aoc_util::try_get(&warehouse.items, &src).unwrap()
+                } else {
+                    Item::Empty
+                };
+                *aoc_util::try_get_mut(&mut warehouse.items, &pt).unwrap() = v;
             }
 
-            let maybe_lr = match aoc_util::try_get(&warehouse.items, &robot_dest).unwrap() {
-                Item::Wall => panic!(),
-                Item::BoxL => Some((robot_dest.clone(), &robot_dest + &(Command::Right).delta())),
-                Item::BoxR => Some((&robot_dest + &(Command::Left).delta(), robot_dest.clone())),
-                Item::Empty => None,
-            };
-
-            match maybe_lr {
-                Some((l, r)) => {
-                    *aoc_util::try_get_mut(&mut warehouse.items, &l).unwrap() = Item::Empty;
-                    *aoc_util::try_get_mut(&mut warehouse.items, &r).unwrap() = Item::Empty;
-                }
-                None => (),
-            }
-
-            warehouse.robot = robot_dest;
+            warehouse.robot += delta;
         }
     };
 }
@@ -238,11 +226,11 @@ fn gps(warehouse: &Warehouse) -> usize {
 fn main() {
     let args: Vec<_> = env::args().collect();
     let (mut warehouse, commands) = parse_input(fs::read_to_string(&args[1]).unwrap());
-    println!("{warehouse}");
+    //println!("{warehouse}");
 
     for command in commands {
         exec_command(&mut warehouse, command);
-        println!("{warehouse}");
+        //println!("{warehouse}");
     }
 
     let g = gps(&warehouse);
