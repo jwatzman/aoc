@@ -6,6 +6,17 @@ pub struct Pt<T> {
     pub col: T,
 }
 
+impl<T> Pt<T> {
+    pub fn try_from<U>(row: U, col: U) -> Result<Self, <T as TryFrom<U>>::Error>
+    where
+        T: TryFrom<U>,
+    {
+        let row = T::try_from(row)?;
+        let col = T::try_from(col)?;
+        Ok(Pt { row, col })
+    }
+}
+
 impl<T> Pt<T>
 where
     T: Neg<Output = T> + Copy,
@@ -58,6 +69,19 @@ where
 {
     type Output = Pt<T>;
     fn add(self, rhs: Self) -> Self::Output {
+        Pt {
+            row: self.row + rhs.row,
+            col: self.col + rhs.col,
+        }
+    }
+}
+
+impl<T> Add<Pt<T>> for &Pt<T>
+where
+    T: Add<Output = T> + Copy,
+{
+    type Output = Pt<T>;
+    fn add(self, rhs: Pt<T>) -> Self::Output {
         Pt {
             row: self.row + rhs.row,
             col: self.col + rhs.col,

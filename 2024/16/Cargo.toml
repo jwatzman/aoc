@@ -1,0 +1,8 @@
+[package]
+name = "aoc16"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+aoc_util = { version = "0.1.0", path = "../aoc_util" }
+priority-queue = "2.1.1"
