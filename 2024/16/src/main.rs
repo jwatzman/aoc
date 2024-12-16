@@ -98,10 +98,28 @@ fn adj(maze: &Maze, (pt, dir): &(Pt, Direction)) -> Vec<((Pt, Direction), usize)
     return r;
 }
 
+fn collect_best_paths(
+    best: &mut HashSet<(Pt, Direction)>,
+    prevs: &HashMap<(Pt, Direction), Vec<(Pt, Direction)>>,
+    loc: &(Pt, Direction),
+) {
+    best.insert(loc.clone());
+    let prev_l = match prevs.get(loc) {
+        None => return,
+        Some(l) => l,
+    };
+    for prev in prev_l {
+        if !best.contains(prev) {
+            collect_best_paths(best, prevs, prev);
+        }
+    }
+}
+
 fn solve(maze: &Maze, start: &Pt, end: &Pt) -> usize {
     let mut pq = priority_queue::PriorityQueue::new();
     let mut visited = HashSet::new();
     let mut costs = HashMap::new();
+    let mut prevs = HashMap::new();
 
     let start_loc = (start.clone(), Direction::Right);
     costs.insert(start_loc.clone(), 0);
@@ -109,9 +127,6 @@ fn solve(maze: &Maze, start: &Pt, end: &Pt) -> usize {
 
     while let Some((loc, _)) = pq.pop() {
         let cost = *costs.get(&loc).unwrap();
-        if loc.0 == *end {
-            return cost;
-        }
 
         for (next_loc, addl_cost) in adj(maze, &loc) {
             if visited.contains(&next_loc) {
@@ -123,14 +138,41 @@ fn solve(maze: &Maze, start: &Pt, end: &Pt) -> usize {
 
             if tot_cost < prev_tot_cost {
                 costs.insert(next_loc.clone(), tot_cost);
+                prevs.insert(next_loc.clone(), vec![loc.clone()]);
                 pq.push(next_loc, Reverse(tot_cost));
+            } else if tot_cost == prev_tot_cost {
+                prevs.get_mut(&next_loc).unwrap().push(loc.clone());
             }
         }
 
         visited.insert(loc);
     }
 
-    panic!();
+    let end_locs: Vec<(Pt, Direction)> = vec![
+        Direction::Up,
+        Direction::Down,
+        Direction::Left,
+        Direction::Right,
+    ]
+    .into_iter()
+    .map(|d| (end.clone(), d))
+    .collect();
+
+    let best_cost = end_locs
+        .iter()
+        .map(|l| *costs.get(&l).unwrap())
+        .min()
+        .unwrap();
+    let mut best = HashSet::new();
+    for loc in end_locs
+        .into_iter()
+        .filter(|l| *costs.get(l).unwrap() == best_cost)
+    {
+        collect_best_paths(&mut best, &prevs, &loc);
+    }
+
+    let best_squished: HashSet<Pt> = best.into_iter().map(|l| l.0).collect();
+    return best_squished.len();
 }
 
 fn main() {
