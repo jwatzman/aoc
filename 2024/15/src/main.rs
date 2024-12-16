@@ -8,7 +8,8 @@ type Pt = aoc_util::Pt<RC>;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Item {
     Wall,
-    Box,
+    BoxL,
+    BoxR,
     Empty,
 }
 
@@ -46,11 +47,13 @@ impl Display for Warehouse {
                 {
                     write!(f, "@")?;
                 } else {
-                    match item {
-                        Item::Wall => write!(f, "#")?,
-                        Item::Box => write!(f, "O")?,
-                        Item::Empty => write!(f, ".")?,
-                    }
+                    let c = match item {
+                        Item::Wall => '#',
+                        Item::BoxL => '[',
+                        Item::BoxR => ']',
+                        Item::Empty => '.',
+                    };
+                    write!(f, "{c}")?;
                 }
             }
             write!(f, "\n")?;
@@ -74,14 +77,24 @@ fn parse_input(contents: String) -> (Warehouse, Vec<Command>) {
         let mut line_items = Vec::new();
         for (col, c) in line.chars().enumerate() {
             match c {
-                '.' => line_items.push(Item::Empty),
-                '#' => line_items.push(Item::Wall),
-                'O' => line_items.push(Item::Box),
+                '.' => {
+                    line_items.push(Item::Empty);
+                    line_items.push(Item::Empty);
+                }
+                '#' => {
+                    line_items.push(Item::Wall);
+                    line_items.push(Item::Wall);
+                }
+                'O' => {
+                    line_items.push(Item::BoxL);
+                    line_items.push(Item::BoxR);
+                }
                 '@' => {
+                    line_items.push(Item::Empty);
                     line_items.push(Item::Empty);
                     maybe_robot = Some(Pt {
                         row: RC::try_from(row).unwrap(),
-                        col: RC::try_from(col).unwrap(),
+                        col: RC::try_from(col * 2).unwrap(),
                     });
                 }
                 _ => panic!("Invalid item: {}", c),
@@ -113,6 +126,7 @@ fn parse_input(contents: String) -> (Warehouse, Vec<Command>) {
     );
 }
 
+/*
 fn exec_command(warehouse: &mut Warehouse, command: Command) {
     let delta = command.delta();
     let robot_dest = &warehouse.robot + &delta;
@@ -130,13 +144,14 @@ fn exec_command(warehouse: &mut Warehouse, command: Command) {
     *aoc_util::try_get_mut(&mut warehouse.items, &robot_dest).unwrap() = Item::Empty;
     warehouse.robot = robot_dest;
 }
+*/
 
 fn gps(warehouse: &Warehouse) -> usize {
     let mut r = 0;
 
     for (row, line) in warehouse.items.iter().enumerate() {
         for (col, item) in line.iter().enumerate() {
-            if *item == Item::Box {
+            if *item == Item::BoxL {
                 r += 100 * row + col;
             }
         }
@@ -148,8 +163,9 @@ fn gps(warehouse: &Warehouse) -> usize {
 fn main() {
     let args: Vec<_> = env::args().collect();
     let (mut warehouse, commands) = parse_input(fs::read_to_string(&args[1]).unwrap());
-    //println!("{warehouse}");
+    println!("{warehouse}");
 
+    /*
     for command in commands {
         exec_command(&mut warehouse, command);
         //println!("{warehouse}");
@@ -157,4 +173,5 @@ fn main() {
 
     let g = gps(&warehouse);
     println!("{g}");
+    */
 }
