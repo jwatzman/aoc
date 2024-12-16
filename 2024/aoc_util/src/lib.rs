@@ -1,6 +1,9 @@
 pub mod pt;
 pub use pt::Pt;
 
+pub mod direction;
+pub use direction::Direction;
+
 pub fn try_get<'a, T, U>(vv: &'a Vec<Vec<T>>, pt: &Pt<U>) -> Option<&'a T>
 where
     T: Copy,

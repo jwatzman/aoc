@@ -7,6 +7,7 @@ use aoc_util::try_get;
 
 type RC = i16;
 type Pt = aoc_util::Pt<RC>;
+type Command = aoc_util::Direction;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Item {
@@ -14,25 +15,6 @@ enum Item {
     BoxL,
     BoxR,
     Empty,
-}
-
-#[derive(Debug, Clone, Copy)]
-enum Command {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-impl Command {
-    fn delta(&self) -> Pt {
-        match *self {
-            Command::Up => Pt { row: -1, col: 0 },
-            Command::Down => Pt { row: 1, col: 0 },
-            Command::Left => Pt { row: 0, col: -1 },
-            Command::Right => Pt { row: 0, col: 1 },
-        }
-    }
 }
 
 #[derive(Debug)]

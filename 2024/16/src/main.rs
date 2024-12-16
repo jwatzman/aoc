@@ -6,43 +6,7 @@ use std::fs;
 
 type RC = i16;
 type Pt = aoc_util::Pt<RC>;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-impl Direction {
-    fn rot_left(&self) -> Self {
-        match *self {
-            Direction::Up => Direction::Left,
-            Direction::Down => Direction::Right,
-            Direction::Left => Direction::Down,
-            Direction::Right => Direction::Up,
-        }
-    }
-
-    fn rot_right(&self) -> Self {
-        match *self {
-            Direction::Up => Direction::Right,
-            Direction::Down => Direction::Left,
-            Direction::Left => Direction::Up,
-            Direction::Right => Direction::Down,
-        }
-    }
-
-    fn delta(&self) -> Pt {
-        match *self {
-            Direction::Up => Pt { row: -1, col: 0 },
-            Direction::Down => Pt { row: 1, col: 0 },
-            Direction::Left => Pt { row: 0, col: -1 },
-            Direction::Right => Pt { row: 0, col: 1 },
-        }
-    }
-}
+type Direction = aoc_util::Direction;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Tile {
@@ -148,16 +112,7 @@ fn solve(maze: &Maze, start: &Pt, end: &Pt) -> usize {
         visited.insert(loc);
     }
 
-    let end_locs: Vec<(Pt, Direction)> = vec![
-        Direction::Up,
-        Direction::Down,
-        Direction::Left,
-        Direction::Right,
-    ]
-    .into_iter()
-    .map(|d| (end.clone(), d))
-    .collect();
-
+    let end_locs: Vec<(Pt, Direction)> = Direction::ALL.iter().map(|d| (end.clone(), *d)).collect();
     let best_cost = end_locs
         .iter()
         .map(|l| *costs.get(&l).unwrap())
