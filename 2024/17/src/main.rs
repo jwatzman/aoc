@@ -107,31 +107,23 @@ impl Computer {
     }
 }
 
-fn part2() {
-    let program = vec![2_u64, 4, 1, 1, 7, 5, 4, 6, 0, 3, 1, 4, 5, 5, 3, 0];
-    let mut a = 0;
+fn part2(a: u64, program: &[u64]) -> Option<u64> {
+    let out = match program.first() {
+        None => return Some(a),
+        Some(out) => *out,
+    };
 
-    for out in program.iter().rev() {
-        a <<= 3;
-
-        let mut found = None;
-        for i in 0..8 {
-            let maybe_a = a + i;
-            if *out == (maybe_a ^ 5 ^ (maybe_a >> (i ^ 1))) % 8 {
-                if found.is_some() {
-                    panic!();
-                }
-                found = Some(i);
+    for i in 0..8 {
+        let maybe_a = (a << 3) + i;
+        if out == (maybe_a ^ 5 ^ (maybe_a >> (i ^ 1))) % 8 {
+            match part2(maybe_a, &program[1..]) {
+                None => (),
+                Some(a) => return Some(a),
             }
         }
-
-        match found {
-            None => panic!(),
-            Some(i) => a += i,
-        }
-
-        println!("{a}");
     }
+
+    None
 }
 
 fn main() {
@@ -150,6 +142,9 @@ fn main() {
                 .join(",")
         );
     } else {
-        part2();
+        let mut program = vec![2_u64, 4, 1, 1, 7, 5, 4, 6, 0, 3, 1, 4, 5, 5, 3, 0];
+        program.reverse();
+        let r = part2(0, &program);
+        dbg!(&r);
     }
 }
