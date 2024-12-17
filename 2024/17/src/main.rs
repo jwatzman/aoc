@@ -99,6 +99,7 @@ impl Computer {
                     self.b = self.b ^ self.c;
                 }
                 5 => {
+                    /*
                     self.out.push(self.get_combo_operand() % 8);
                     if self.out.len() > self.instructions.len() {
                         return false;
@@ -108,6 +109,8 @@ impl Computer {
                     if self.out[l] != self.instructions[l].into() {
                         return false;
                     }
+                    */
+                    return self.get_combo_operand() % 8 == 2;
                 }
                 6 => {
                     self.b = self.a / (1 << self.get_combo_operand());
@@ -121,12 +124,15 @@ impl Computer {
             self.ip += 2;
         }
 
+        /*
         return self.out.len() == self.instructions.len()
             && self
                 .out
                 .iter()
                 .zip(self.instructions.iter())
                 .all(|(o, i)| *o == (*i).into());
+            */
+        return false;
     }
 }
 
@@ -146,10 +152,13 @@ fn main() {
         computer.a = a;
 
         if computer.run() {
-            break;
+            println!("{a}");
         }
 
         a += 1;
+        if a > 100 {
+            break;
+        }
     }
 
     println!("{a}");
