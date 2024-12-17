@@ -64,7 +64,15 @@ impl Computer {
         (*self.instructions.get(self.ip + 1).unwrap()).into()
     }
 
-    fn run(&mut self) {
+    fn reset(&mut self) {
+        self.a = 0;
+        self.b = 0;
+        self.c = 0;
+        self.ip = 0;
+        self.out = Vec::new();
+    }
+
+    fn run(&mut self) -> bool {
         loop {
             let instruction = match self.instructions.get(self.ip) {
                 None => break,
@@ -92,6 +100,14 @@ impl Computer {
                 }
                 5 => {
                     self.out.push(self.get_combo_operand() % 8);
+                    if self.out.len() > self.instructions.len() {
+                        return false;
+                    }
+
+                    let l = self.out.len() - 1;
+                    if self.out[l] != self.instructions[l].into() {
+                        return false;
+                    }
                 }
                 6 => {
                     self.b = self.a / (1 << self.get_combo_operand());
@@ -104,20 +120,37 @@ impl Computer {
 
             self.ip += 2;
         }
+
+        return self.out.len() == self.instructions.len()
+            && self
+                .out
+                .iter()
+                .zip(self.instructions.iter())
+                .all(|(o, i)| *o == (*i).into());
     }
 }
 
 fn main() {
     let args: Vec<_> = env::args().collect();
     let mut computer = Computer::new(fs::read_to_string(&args[1]).unwrap());
-    computer.run();
-    println!(
-        "{}",
-        computer
-            .out
-            .iter()
-            .map(|n| n.to_string())
-            .collect::<Vec<_>>()
-            .join(",")
-    );
+
+    let mut a = 0;
+    loop {
+        /*
+        if a % 100 == 0 {
+            println!("{a}...");
+        }
+        */
+
+        computer.reset();
+        computer.a = a;
+
+        if computer.run() {
+            break;
+        }
+
+        a += 1;
+    }
+
+    println!("{a}");
 }
