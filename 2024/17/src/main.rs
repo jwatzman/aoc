@@ -64,15 +64,7 @@ impl Computer {
         (*self.instructions.get(self.ip + 1).unwrap()).into()
     }
 
-    fn reset(&mut self) {
-        self.a = 0;
-        self.b = 0;
-        self.c = 0;
-        self.ip = 0;
-        self.out = Vec::new();
-    }
-
-    fn run(&mut self) -> bool {
+    fn run(&mut self) {
         loop {
             let instruction = match self.instructions.get(self.ip) {
                 None => break,
@@ -99,18 +91,7 @@ impl Computer {
                     self.b = self.b ^ self.c;
                 }
                 5 => {
-                    /*
                     self.out.push(self.get_combo_operand() % 8);
-                    if self.out.len() > self.instructions.len() {
-                        return false;
-                    }
-
-                    let l = self.out.len() - 1;
-                    if self.out[l] != self.instructions[l].into() {
-                        return false;
-                    }
-                    */
-                    return self.get_combo_operand() % 8 == 2;
                 }
                 6 => {
                     self.b = self.a / (1 << self.get_combo_operand());
@@ -123,43 +104,44 @@ impl Computer {
 
             self.ip += 2;
         }
+    }
+}
 
-        /*
-        return self.out.len() == self.instructions.len()
-            && self
-                .out
-                .iter()
-                .zip(self.instructions.iter())
-                .all(|(o, i)| *o == (*i).into());
-            */
-        return false;
+fn part2() {
+    let program = vec![2_u64, 4, 1, 1, 7, 5, 4, 6, 0, 3, 1, 4, 5, 5, 3, 0];
+    let mut a = 0;
+
+    for out in program.iter().rev() {
+        a <<= 3;
+
+        for i in 0..8 {
+            let maybe_a = a + i;
+            if *out == (maybe_a ^ 5 ^ (maybe_a >> (i ^ 1))) % 8 {
+                a = maybe_a;
+                break;
+            }
+        }
+
+        println!("{a}");
     }
 }
 
 fn main() {
     let args: Vec<_> = env::args().collect();
-    let mut computer = Computer::new(fs::read_to_string(&args[1]).unwrap());
 
-    let mut a = 0;
-    loop {
-        /*
-        if a % 100 == 0 {
-            println!("{a}...");
-        }
-        */
-
-        computer.reset();
-        computer.a = a;
-
-        if computer.run() {
-            println!("{a}");
-        }
-
-        a += 1;
-        if a > 100 {
-            break;
-        }
+    if args.len() > 1 {
+        let mut computer = Computer::new(fs::read_to_string(&args[1]).unwrap());
+        computer.run();
+        println!(
+            "{}",
+            computer
+                .out
+                .iter()
+                .map(|n| n.to_string())
+                .collect::<Vec<_>>()
+                .join(",")
+        );
+    } else {
+        part2();
     }
-
-    println!("{a}");
 }

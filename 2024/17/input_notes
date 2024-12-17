@@ -24,3 +24,13 @@ out a ^ 5 ^ (a >> (a%8 ^ 1)  %8
 
 
 x = x ^ 5 ^ (a>>(x^1))
+
+
+last 0 bits are 0b0
+next iteration -- a = 0bXXX
+find 0bXXX s.t. 0 == a ^ 5 ^ (a >> 0bXXX ^ 1) %8
+
+
+last 3 bits are 0^5 = 5  0b101
+next iteration -- a = 0b101XXX
+find 0bXXX s.t. 3 == a ^ 5 ^ (a >> 0bXXX ^ 1) %8
