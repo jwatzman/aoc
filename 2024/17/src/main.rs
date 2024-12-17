@@ -114,12 +114,20 @@ fn part2() {
     for out in program.iter().rev() {
         a <<= 3;
 
+        let mut found = None;
         for i in 0..8 {
             let maybe_a = a + i;
             if *out == (maybe_a ^ 5 ^ (maybe_a >> (i ^ 1))) % 8 {
-                a = maybe_a;
-                break;
+                if found.is_some() {
+                    panic!();
+                }
+                found = Some(i);
             }
+        }
+
+        match found {
+            None => panic!(),
+            Some(i) => a += i,
         }
 
         println!("{a}");
