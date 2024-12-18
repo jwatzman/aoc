@@ -74,8 +74,8 @@ fn main() {
     let args: Vec<_> = env::args().collect();
     let corrupted = parse_input(fs::read_to_string(&args[1]).unwrap());
 
-    let mut cur = HashSet::new();
-    for corruption in &corrupted {
+    let mut cur: HashSet<Pt> = corrupted[0..1024].iter().cloned().collect();
+    for corruption in &corrupted[1024..] {
         cur.insert(corruption.clone());
         match solve(&cur) {
             Some(_) => continue,
