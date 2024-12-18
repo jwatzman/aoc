@@ -11,6 +11,7 @@ type Pt = aoc_util::Pt<RC>;
 
 const MAX_ROW: RC = 70;
 const MAX_COL: RC = 70;
+const GRID_SZ: usize = 70 * 70;
 
 fn parse_input(contents: String) -> Vec<Pt> {
     let mut corrupted = Vec::new();
@@ -44,6 +45,9 @@ fn solve(corrupted: &HashSet<Pt>) -> Option<usize> {
     let mut visited = HashSet::new();
     let mut costs = HashMap::new();
 
+    visited.reserve(GRID_SZ);
+    costs.reserve(GRID_SZ);
+
     let start = Pt { row: 0, col: 0 };
     costs.insert(start.clone(), 0);
     pq.push(start, Reverse(0));
@@ -56,10 +60,19 @@ fn solve(corrupted: &HashSet<Pt>) -> Option<usize> {
 
         for next in adj(corrupted, &pt) {
             let tot_cost = cost + 1;
-            let prev_tot_cost = *costs.get(&next).unwrap_or(&usize::MAX);
-            if tot_cost < prev_tot_cost {
-                costs.insert(next.clone(), tot_cost);
-                pq.push(next, Reverse(tot_cost));
+
+            let prev_tot_cost_opt = costs.get_mut(&next);
+            match prev_tot_cost_opt {
+                None => {
+                    costs.insert(next.clone(), tot_cost);
+                    pq.push(next, Reverse(tot_cost));
+                }
+                Some(prev_tot_cost) => {
+                    if tot_cost < *prev_tot_cost {
+                        *prev_tot_cost = tot_cost;
+                        pq.push(next, Reverse(tot_cost));
+                    }
+                }
             }
         }
 
@@ -74,6 +87,7 @@ fn main() {
     let corrupted = parse_input(fs::read_to_string(&args[1]).unwrap());
 
     let mut cur: HashSet<Pt> = corrupted[0..1024].iter().cloned().collect();
+    cur.reserve(corrupted.len() - 1024);
     for corruption in &corrupted[1024..] {
         cur.insert(corruption.clone());
         match solve(&cur) {
