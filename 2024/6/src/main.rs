@@ -84,13 +84,13 @@ fn init_steps(lab: &Lab, guard: &Guard) -> HashSet<(i16, i16)> {
 fn does_loop(lab: &Lab, guard: &Guard) -> bool {
     let mut guard = guard.clone();
     let mut all_pos = HashSet::new();
+    all_pos.reserve((lab.max.0 * lab.max.1).try_into().unwrap());
 
     loop {
-        if all_pos.contains(&guard) {
+        if !all_pos.insert(guard.clone()) {
             return true;
         }
 
-        all_pos.insert(guard.clone());
         match step(&lab, guard) {
             None => return false,
             Some(new_guard) => guard = new_guard,
