@@ -30,14 +30,13 @@ fn parse_input(contents: String) -> Vec<Pt> {
     return corrupted;
 }
 
-fn adj(corrupted: &HashSet<Pt>, pt: &Pt) -> Vec<Pt> {
+fn adj<'a>(corrupted: &'a HashSet<Pt>, pt: &'a Pt) -> impl Iterator<Item = Pt> + use<'a> {
     Direction::ALL
         .iter()
-        .map(|d| pt + d.delta())
+        .map(move |d| pt + d.delta())
         .filter(|p| p.row >= 0 && p.col >= 0)
         .filter(|p| p.row <= MAX_ROW && p.col <= MAX_COL)
         .filter(|p| !corrupted.contains(p))
-        .collect()
 }
 
 fn solve(corrupted: &HashSet<Pt>) -> Option<usize> {
