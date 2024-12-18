@@ -68,6 +68,14 @@ name = "aoc17"
 version = "0.1.0"
 
 [[package]]
+name = "aoc18"
+version = "0.1.0"
+dependencies = [
+ "aoc_util",
+ "priority-queue",
+]
+
+[[package]]
 name = "aoc2"
 version = "0.1.0"
 
