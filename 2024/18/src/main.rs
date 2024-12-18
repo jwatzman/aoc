@@ -40,7 +40,7 @@ fn adj(corrupted: &HashSet<Pt>, pt: &Pt) -> Vec<Pt> {
         .collect()
 }
 
-fn solve(corrupted: &HashSet<Pt>) -> usize {
+fn solve(corrupted: &HashSet<Pt>) -> Option<usize> {
     let mut pq = priority_queue::PriorityQueue::new();
     let mut visited = HashSet::new();
     let mut costs = HashMap::new();
@@ -52,7 +52,7 @@ fn solve(corrupted: &HashSet<Pt>) -> usize {
     while let Some((pt, _)) = pq.pop() {
         let cost = *costs.get(&pt).unwrap();
         if pt.row == MAX_ROW && pt.col == MAX_COL {
-            return cost;
+            return Some(cost);
         }
 
         for next in adj(corrupted, &pt) {
@@ -67,13 +67,22 @@ fn solve(corrupted: &HashSet<Pt>) -> usize {
         visited.insert(pt);
     }
 
-    panic!();
+    return None;
 }
 
 fn main() {
     let args: Vec<_> = env::args().collect();
     let corrupted = parse_input(fs::read_to_string(&args[1]).unwrap());
 
-    let soln = solve(&corrupted[0..1024].iter().cloned().collect());
-    println!("{soln}");
+    let mut cur = HashSet::new();
+    for corruption in &corrupted {
+        cur.insert(corruption.clone());
+        match solve(&cur) {
+            Some(_) => continue,
+            None => {
+                dbg!(corruption);
+                break;
+            }
+        }
+    }
 }
