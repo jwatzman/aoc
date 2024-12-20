@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::env;
 use std::fs;
@@ -31,7 +32,15 @@ fn find_one_way<'a>(towel_patterns: &HashSet<&str>, design: &'a str) -> Option<V
     return None;
 }
 
-fn count_all_ways(towel_patterns: &HashSet<&str>, design: &str) -> usize {
+fn count_all_ways<'a>(
+    memo: &mut HashMap<&'a str, usize>,
+    towel_patterns: &HashSet<&str>,
+    design: &'a str,
+) -> usize {
+    if let Some(n) = memo.get(design) {
+        return *n;
+    }
+
     if design.is_empty() {
         return 1;
     }
@@ -40,10 +49,11 @@ fn count_all_ways(towel_patterns: &HashSet<&str>, design: &str) -> usize {
     for i in 1..=design.len() {
         let towel = &design[..i];
         if towel_patterns.contains(towel) {
-            r += count_all_ways(towel_patterns, &design[i..]);
+            r += count_all_ways(memo, towel_patterns, &design[i..]);
         }
     }
 
+    memo.insert(design, r);
     return r;
 }
 
@@ -51,7 +61,7 @@ fn reduce<'a>(towel_patterns: &'a HashSet<&str>) -> HashSet<&'a str> {
     let mut r = towel_patterns.clone();
     for pattern in towel_patterns.iter() {
         r.remove(pattern);
-        if count_all_ways(&r, pattern) == 0 {
+        if find_one_way(&r, pattern).is_none() {
             r.insert(pattern);
         }
     }
@@ -66,9 +76,11 @@ fn main() {
     let reduced_towel_patterns = reduce(&towel_patterns);
 
     let mut r = 0;
+    let mut memo = HashMap::new();
+
     for design in towel_designs {
         if find_one_way(&reduced_towel_patterns, design).is_some() {
-            r += count_all_ways(&towel_patterns, design);
+            r += count_all_ways(&mut memo, &towel_patterns, design);
         }
     }
 
