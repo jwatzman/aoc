@@ -76,6 +76,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc19"
+version = "0.1.0"
+
+[[package]]
 name = "aoc2"
 version = "0.1.0"
 
