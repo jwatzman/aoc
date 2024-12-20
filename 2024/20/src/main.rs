@@ -65,6 +65,7 @@ fn parse_input(contents: String) -> Racetrack {
 
 fn adj<'a>(
     racetrack: &'a Racetrack,
+    banned_cheats: &'a HashSet<(Pt, Pt)>,
     state: &'a (Pt, Cheat),
 ) -> impl Iterator<Item = (Pt, Cheat)> + use<'a> {
     Direction::ALL.iter().filter_map(move |d| {
@@ -73,7 +74,12 @@ fn adj<'a>(
         match (*pos, state.1.clone()) {
             (Position::Track, Cheat::CanCheat(_)) => Some((pt, state.1.clone())),
             (Position::Track, Cheat::Cheating(_, start)) => {
-                Some((pt.clone(), Cheat::Cheated(start, pt.clone())))
+                let cheat = (start.clone(), pt.clone());
+                if banned_cheats.contains(&cheat) {
+                    None
+                } else {
+                    Some((pt.clone(), Cheat::Cheated(start, pt.clone())))
+                }
             }
             (Position::Track, Cheat::Cheated(_, _)) => Some((pt, state.1.clone())),
             (Position::Wall, Cheat::CanCheat(n)) => {
@@ -88,7 +94,11 @@ fn adj<'a>(
     })
 }
 
-fn solve(racetrack: &Racetrack, init_cheat: Cheat) -> (usize, (Pt, Pt)) {
+fn solve(
+    racetrack: &Racetrack,
+    banned_cheats: &HashSet<(Pt, Pt)>,
+    init_cheat: Cheat,
+) -> (usize, (Pt, Pt)) {
     let mut pq = priority_queue::PriorityQueue::new();
     let mut visited = HashSet::new();
     let mut costs = HashMap::new();
@@ -115,7 +125,7 @@ fn solve(racetrack: &Racetrack, init_cheat: Cheat) -> (usize, (Pt, Pt)) {
             );
         }
 
-        for next in adj(racetrack, &state) {
+        for next in adj(racetrack, banned_cheats, &state) {
             let tot_cost = cost + 1;
 
             let prev_tot_cost_opt = costs.get_mut(&next);
@@ -144,14 +154,27 @@ fn solve(racetrack: &Racetrack, init_cheat: Cheat) -> (usize, (Pt, Pt)) {
 fn main() {
     let args: Vec<_> = env::args().collect();
     let racetrack = parse_input(fs::read_to_string(&args[1]).unwrap());
+    let mut banned_cheats = HashSet::new();
 
     let dummy_pt = Pt { row: 0, col: 0 };
     let (baseline, _) = solve(
         &racetrack,
+        &banned_cheats,
         Cheat::Cheated(dummy_pt.clone(), dummy_pt.clone()),
     );
 
-    let (fastest, cheat_used) = solve(&racetrack, Cheat::CanCheat(2));
-    println!("{}", baseline - fastest);
-    dbg!(cheat_used);
+    let mut r = 0;
+    loop {
+        println!("{r}");
+        let (cheated, cheat_used) = solve(&racetrack, &banned_cheats, Cheat::CanCheat(2));
+        let improvement = baseline - cheated;
+        if improvement >= 100 {
+            r += 1;
+            banned_cheats.insert(cheat_used);
+        } else {
+            break;
+        }
+    }
+
+    println!("{r}");
 }
