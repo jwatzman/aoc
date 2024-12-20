@@ -102,7 +102,6 @@ fn solve(
     let mut pq = priority_queue::PriorityQueue::new();
     let mut visited = HashSet::new();
     let mut costs = HashMap::new();
-    let mut prevs = HashMap::new();
 
     let approx_sz = racetrack.map.len() * racetrack.map.len();
     visited.reserve(approx_sz);
@@ -132,13 +131,11 @@ fn solve(
             match prev_tot_cost_opt {
                 None => {
                     costs.insert(next.clone(), tot_cost);
-                    prevs.insert(next.clone(), state.clone());
                     pq.push(next, Reverse(tot_cost));
                 }
                 Some(prev_tot_cost) => {
                     if tot_cost < *prev_tot_cost {
                         *prev_tot_cost = tot_cost;
-                        prevs.insert(next.clone(), state.clone());
                         pq.push(next, Reverse(tot_cost));
                     }
                 }
