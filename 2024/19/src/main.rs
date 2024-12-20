@@ -30,14 +30,26 @@ fn can_make_design(towel_patterns: &HashSet<&str>, design: &str) -> bool {
     return false;
 }
 
+fn reduce(towel_patterns: HashSet<&str>) -> HashSet<&str> {
+    let mut r = towel_patterns.clone();
+    for pattern in towel_patterns.into_iter() {
+        r.remove(pattern);
+        if !can_make_design(&r, pattern) {
+            r.insert(pattern);
+        }
+    }
+
+    return r;
+}
+
 fn main() {
     let args: Vec<_> = env::args().collect();
     let contents = fs::read_to_string(&args[1]).unwrap();
     let (towel_patterns, towel_designs) = parse_input(&contents);
+    let towel_patterns = reduce(towel_patterns);
 
     let mut r = 0;
     for design in towel_designs {
-        dbg!(&design);
         let can_make = can_make_design(&towel_patterns, design);
         if can_make {
             r += 1;
