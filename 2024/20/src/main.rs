@@ -22,6 +22,14 @@ struct Racetrack {
     end: Pt,
 }
 
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+enum Cheat {
+    CanCheat,
+    Cheating(usize),
+    Cheated,
+}
+const CHEAT_STEPS: usize = 2;
+
 fn parse_input(contents: String) -> Racetrack {
     let mut map = Vec::new();
     let mut start = None;
@@ -56,19 +64,24 @@ fn parse_input(contents: String) -> Racetrack {
     };
 }
 
-fn adj<'a>(racetrack: &'a Racetrack, pt: &'a Pt) -> impl Iterator<Item = Pt> + use<'a> {
+fn adj<'a>(
+    racetrack: &'a Racetrack,
+    state: &'a (Pt, Cheat),
+) -> impl Iterator<Item = (Pt, Cheat)> + use<'a> {
     Direction::ALL.iter().filter_map(move |d| {
-        let pt = pt + d.delta();
+        let pt = &state.0 + d.delta();
         let pos = aoc_util::try_get(&racetrack.map, &pt)?;
-        if *pos == Position::Track {
-            Some(pt)
-        } else {
-            None
+        match (*pos, state.1) {
+            (Position::Track, Cheat::CanCheat) => Some((pt, Cheat::CanCheat)),
+            (Position::Track, _) => Some((pt, Cheat::Cheated)),
+            (Position::Wall, Cheat::CanCheat) => Some((pt, Cheat::Cheating(CHEAT_STEPS - 1))),
+            (Position::Wall, Cheat::Cheating(n)) if n > 1 => Some((pt, Cheat::Cheating(n - 1))),
+            (Position::Wall, _) => None,
         }
     })
 }
 
-fn solve(racetrack: &Racetrack) -> usize {
+fn solve(racetrack: &Racetrack, enable_cheats: bool) -> usize {
     let mut pq = priority_queue::PriorityQueue::new();
     let mut visited = HashSet::new();
     let mut costs = HashMap::new();
@@ -77,16 +90,25 @@ fn solve(racetrack: &Racetrack) -> usize {
     visited.reserve(approx_sz);
     costs.reserve(approx_sz);
 
-    costs.insert(racetrack.start.clone(), 0);
-    pq.push(racetrack.start.clone(), Reverse(0));
+    let init_state = (
+        racetrack.start.clone(),
+        if enable_cheats {
+            Cheat::CanCheat
+        } else {
+            Cheat::Cheated
+        },
+    );
 
-    while let Some((pt, _)) = pq.pop() {
-        let cost = *costs.get(&pt).unwrap();
-        if pt == racetrack.end {
+    costs.insert(init_state.clone(), 0);
+    pq.push(init_state, Reverse(0));
+
+    while let Some((state, _)) = pq.pop() {
+        let cost = *costs.get(&state).unwrap();
+        if state.0 == racetrack.end {
             return cost;
         }
 
-        for next in adj(racetrack, &pt) {
+        for next in adj(racetrack, &state) {
             let tot_cost = cost + 1;
 
             let prev_tot_cost_opt = costs.get_mut(&next);
@@ -104,7 +126,7 @@ fn solve(racetrack: &Racetrack) -> usize {
             }
         }
 
-        visited.insert(pt);
+        visited.insert(state);
     }
 
     panic!();
@@ -112,27 +134,8 @@ fn solve(racetrack: &Racetrack) -> usize {
 
 fn main() {
     let args: Vec<_> = env::args().collect();
-    let mut racetrack = parse_input(fs::read_to_string(&args[1]).unwrap());
-    let baseline = solve(&racetrack);
-
-    let mut r = 0;
-    for row in 0..racetrack.map.len() {
-        for col in 0..racetrack.map[row].len() {
-            let pos = racetrack.map.get_mut(row).unwrap().get_mut(col).unwrap();
-            if *pos != Position::Wall {
-                continue;
-            }
-
-            *pos = Position::Track;
-
-            let cheated = solve(&racetrack);
-            if baseline - cheated >= 100 {
-                r += 1;
-            }
-
-            racetrack.map[row][col] = Position::Wall;
-        }
-    }
-
-    println!("{r}");
+    let racetrack = parse_input(fs::read_to_string(&args[1]).unwrap());
+    let baseline = solve(&racetrack, false);
+    let fastest = solve(&racetrack, true);
+    println!("{}", baseline - fastest);
 }
