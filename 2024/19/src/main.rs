@@ -13,7 +13,25 @@ fn parse_input(contents: &String) -> (HashSet<&str>, Vec<&str>) {
     return (towel_patterns, towel_designs);
 }
 
-fn can_make_design(towel_patterns: &HashSet<&str>, design: &str) -> usize {
+fn find_one_way<'a>(towel_patterns: &HashSet<&str>, design: &'a str) -> Option<Vec<&'a str>> {
+    if design.is_empty() {
+        return Some(Vec::new());
+    }
+
+    for i in 1..=design.len() {
+        let towel = &design[..i];
+        if towel_patterns.contains(towel) {
+            if let Some(mut v) = find_one_way(towel_patterns, &design[i..]) {
+                v.push(towel);
+                return Some(v);
+            }
+        }
+    }
+
+    return None;
+}
+
+fn count_all_ways(towel_patterns: &HashSet<&str>, design: &str) -> usize {
     if design.is_empty() {
         return 1;
     }
@@ -22,7 +40,7 @@ fn can_make_design(towel_patterns: &HashSet<&str>, design: &str) -> usize {
     for i in 1..=design.len() {
         let towel = &design[..i];
         if towel_patterns.contains(towel) {
-            r += can_make_design(towel_patterns, &design[i..]);
+            r += count_all_ways(towel_patterns, &design[i..]);
         }
     }
 
@@ -33,7 +51,7 @@ fn reduce<'a>(towel_patterns: &'a HashSet<&str>) -> HashSet<&'a str> {
     let mut r = towel_patterns.clone();
     for pattern in towel_patterns.iter() {
         r.remove(pattern);
-        if can_make_design(&r, pattern) == 0 {
+        if count_all_ways(&r, pattern) == 0 {
             r.insert(pattern);
         }
     }
@@ -49,8 +67,8 @@ fn main() {
 
     let mut r = 0;
     for design in towel_designs {
-        if can_make_design(&reduced_towel_patterns, design) > 0 {
-            r += can_make_design(&towel_patterns, design);
+        if find_one_way(&reduced_towel_patterns, design).is_some() {
+            r += count_all_ways(&towel_patterns, design);
         }
     }
 
