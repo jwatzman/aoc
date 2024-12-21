@@ -143,6 +143,10 @@ fn solve(
         }
 
         for next in adj(racetrack, banned_cheats, &state) {
+            if visited.contains(&next) {
+                continue;
+            }
+
             let tot_cost = cost + 1;
 
             let prev_tot_cost_opt = costs.get_mut(&next);
@@ -177,7 +181,10 @@ fn main() {
 
     let mut r = 0;
     loop {
-        let (cheated, cheat_used) = solve(&racetrack, &banned_cheats, Cheat::CanCheat(2));
+        if r % 100 == 0 {
+            println!("{r}");
+        }
+        let (cheated, cheat_used) = solve(&racetrack, &banned_cheats, Cheat::CanCheat(20));
         let improvement = baseline - cheated;
         if improvement >= 100 {
             r += 1;
