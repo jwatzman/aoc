@@ -1,9 +1,9 @@
-use std::cmp::Reverse;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::env;
 use std::fs;
 
+use aoc_util::try_get;
 use aoc_util::Direction;
 
 type RC = i16;
@@ -20,13 +20,6 @@ struct Racetrack {
     map: Vec<Vec<Position>>,
     start: Pt,
     end: Pt,
-}
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-enum Cheat {
-    CanCheat(usize),
-    Cheating(usize, Pt),
-    Cheated,
 }
 
 fn parse_input(contents: String) -> Racetrack {
@@ -63,136 +56,114 @@ fn parse_input(contents: String) -> Racetrack {
     };
 }
 
-fn adj<'a>(
-    racetrack: &'a Racetrack,
-    banned_cheats: &'a HashSet<(Pt, Pt)>,
-    state: &'a (Pt, Cheat),
-) -> impl Iterator<Item = (Pt, Cheat)> + use<'a> {
-    Direction::ALL.iter().filter_map(move |d| {
-        let pt = &state.0 + d.delta();
-        let pos = aoc_util::try_get(&racetrack.map, &pt)?;
-        match (*pos, state.1.clone()) {
-            (Position::Track, Cheat::CanCheat(_)) => Some((pt, state.1.clone())),
-            (Position::Track, Cheat::Cheating(_, start)) => {
-                let cheat = (start.clone(), pt.clone());
-                if banned_cheats.contains(&cheat) {
-                    None
-                } else {
-                    Some((pt.clone(), Cheat::Cheated))
-                }
-            }
-            (Position::Track, Cheat::Cheated) => Some((pt, state.1.clone())),
-            (Position::Wall, Cheat::CanCheat(n)) => {
-                Some((pt.clone(), Cheat::Cheating(n - 1, pt.clone())))
-            }
-            (Position::Wall, Cheat::Cheating(n, start)) if n > 1 => {
-                Some((pt, Cheat::Cheating(n - 1, start)))
-            }
-            (Position::Wall, Cheat::Cheating(_, _)) => None,
-            (Position::Wall, Cheat::Cheated) => None,
-        }
-    })
-}
+fn flatten(racetrack: &Racetrack) -> Vec<Pt> {
+    let mut cur = racetrack.start.clone();
+    let mut prev = Pt { row: -1, col: -1 };
+    let mut path = Vec::new();
 
-fn reconstruct_cheat<'a>(
-    prev: &'a HashMap<(Pt, Cheat), (Pt, Cheat)>,
-    mut cur: &'a (Pt, Cheat),
-) -> (Pt, Pt) {
-    loop {
-        let next = prev.get(cur).unwrap();
-        match &next.1 {
-            Cheat::CanCheat(_) => panic!(),
-            Cheat::Cheating(_, start) => return (start.clone(), cur.0.clone()),
-            Cheat::Cheated => cur = next,
-        }
-    }
-}
+    path.push(cur.clone());
 
-fn solve(
-    racetrack: &Racetrack,
-    banned_cheats: &HashSet<(Pt, Pt)>,
-    init_cheat: Cheat,
-) -> (usize, (Pt, Pt)) {
-    let mut pq = priority_queue::PriorityQueue::new();
-    let mut visited = HashSet::new();
-    let mut costs = HashMap::new();
-    let mut prev = HashMap::new();
-
-    let approx_sz = racetrack.map.len() * racetrack.map.len();
-    visited.reserve(approx_sz);
-    costs.reserve(approx_sz);
-    prev.reserve(approx_sz);
-
-    let init_state = (racetrack.start.clone(), init_cheat.clone());
-
-    costs.insert(init_state.clone(), 0);
-    pq.push(init_state, Reverse(0));
-
-    while let Some((state, _)) = pq.pop() {
-        let cost = *costs.get(&state).unwrap();
-        if state.0 == racetrack.end {
-            return (
-                cost,
-                if init_cheat == Cheat::Cheated {
-                    let dummy_pt = Pt { row: 0, col: 0 };
-                    (dummy_pt.clone(), dummy_pt)
-                } else {
-                    reconstruct_cheat(&prev, &state)
-                },
-            );
-        }
-
-        for next in adj(racetrack, banned_cheats, &state) {
-            if visited.contains(&next) {
+    while cur != racetrack.end {
+        for delta in Direction::ALL.map(|d| d.delta()) {
+            let next = &cur + delta;
+            if next == prev {
                 continue;
             }
 
-            let tot_cost = cost + 1;
+            let pos = try_get(&racetrack.map, &next);
+            if *pos.unwrap_or(&Position::Wall) == Position::Wall {
+                continue;
+            }
 
-            let prev_tot_cost_opt = costs.get_mut(&next);
-            match prev_tot_cost_opt {
-                None => {
-                    costs.insert(next.clone(), tot_cost);
-                    prev.insert(next.clone(), state.clone());
-                    pq.push(next, Reverse(tot_cost));
+            prev = cur;
+            cur = next;
+            path.push(cur.clone());
+        }
+    }
+
+    return path;
+}
+
+fn invert(path: &Vec<Pt>) -> HashMap<Pt, isize> {
+    path.iter()
+        .cloned()
+        .enumerate()
+        .map(|(a, b)| (b, a.try_into().unwrap()))
+        .collect()
+}
+
+fn find_cheat_destinations(
+    racetrack: &Racetrack,
+    start: &Pt,
+    cheat_time: isize,
+) -> HashSet<(Pt, isize)> {
+    let init_cheat_time = cheat_time;
+    let mut cheat_time = init_cheat_time;
+    let mut todo = vec![start.clone()];
+    let mut todo_next;
+    let mut visited = HashSet::new();
+    let mut dests = HashSet::new();
+
+    while !todo.is_empty() && cheat_time > 0 {
+        todo_next = Vec::new();
+        cheat_time -= 1;
+
+        for cur in todo {
+            visited.insert(cur.clone());
+
+            for next in Direction::ALL.map(|d| &cur + d.delta()) {
+                if visited.contains(&next) {
+                    continue;
                 }
-                Some(prev_tot_cost) => {
-                    if tot_cost < *prev_tot_cost {
-                        *prev_tot_cost = tot_cost;
-                        prev.insert(next.clone(), state.clone());
-                        pq.push(next, Reverse(tot_cost));
+
+                match try_get(&racetrack.map, &next) {
+                    None => continue,
+                    Some(Position::Wall) => {
+                        todo_next.push(next);
+                    }
+                    Some(Position::Track) => {
+                        dests.insert((next, init_cheat_time - cheat_time));
                     }
                 }
             }
         }
 
-        visited.insert(state);
+        todo = todo_next;
     }
 
-    panic!();
+    return dests;
+}
+
+fn count_cheats(racetrack: &Racetrack, cheat_time: isize, cheat_improvement: isize) -> usize {
+    let path = flatten(racetrack);
+    let inverted_path = invert(&path);
+    let mut cnt = 0;
+
+    for cheat_start in path {
+        for (cheat_dest, cheated_steps) in
+            find_cheat_destinations(racetrack, &cheat_start, cheat_time)
+        {
+            let uncheated_steps =
+                inverted_path.get(&cheat_dest).unwrap() - inverted_path.get(&cheat_start).unwrap();
+            //dbg!(&cheat_start, &cheat_dest, &uncheated_steps, &cheated_steps);
+            match uncheated_steps.checked_sub(cheated_steps) {
+                None => (),
+                Some(n) => {
+                    if n >= cheat_improvement {
+                        cnt += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    return cnt;
 }
 
 fn main() {
     let args: Vec<_> = env::args().collect();
     let racetrack = parse_input(fs::read_to_string(&args[1]).unwrap());
-    let mut banned_cheats = HashSet::new();
 
-    let (baseline, _) = solve(&racetrack, &banned_cheats, Cheat::Cheated);
-
-    let mut r = 0;
-    loop {
-        if r % 100 == 0 {
-            println!("{r}");
-        }
-        let (cheated, cheat_used) = solve(&racetrack, &banned_cheats, Cheat::CanCheat(20));
-        let improvement = baseline - cheated;
-        if improvement >= 100 {
-            r += 1;
-            banned_cheats.insert(cheat_used);
-        } else {
-            break;
-        }
-    }
-
-    println!("{r}");
+    let cheats = count_cheats(&racetrack, 2, 100);
+    println!("{cheats}");
 }

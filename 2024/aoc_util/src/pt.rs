@@ -1,4 +1,6 @@
-use std::ops::{Add, AddAssign, Mul, Neg, Rem, RemAssign};
+use std::ops::{Add, AddAssign, Mul, Neg, Rem, RemAssign, Sub};
+
+use num_traits::Signed;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Pt<T> {
@@ -33,6 +35,15 @@ where
             row: self.col,
             col: -self.row,
         };
+    }
+}
+
+impl<T> Pt<T>
+where
+    T: Signed + Copy,
+{
+    pub fn manhattan_len(&self) -> T {
+        return self.row.abs() + self.col.abs();
     }
 }
 
@@ -109,6 +120,34 @@ where
     }
 }
 
+impl<T> Sub for Pt<T>
+where
+    T: Sub<Output = T> + Copy,
+{
+    type Output = Pt<T>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Pt {
+            row: self.row - rhs.row,
+            col: self.col - rhs.col,
+        }
+    }
+}
+
+impl<T> Sub for &Pt<T>
+where
+    T: Sub<Output = T> + Copy,
+{
+    type Output = Pt<T>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Pt {
+            row: self.row - rhs.row,
+            col: self.col - rhs.col,
+        }
+    }
+}
+
 impl<T> Mul<T> for Pt<T>
 where
     T: Mul<Output = T> + Copy,
@@ -166,22 +205,35 @@ mod tests {
     use super::*;
 
     #[test]
-    fn add_and_mul() {
+    fn base_math() {
         let p1 = Pt { row: 3, col: 4 };
-        let p2 = Pt { row: 5, col: 6 };
+        let p2 = Pt { row: 5, col: 9 };
 
         let p = p1.clone() + p2.clone();
         assert_eq!(p.row, 8);
-        assert_eq!(p.col, 10);
+        assert_eq!(p.col, 13);
 
         let mut p = p1.clone();
         p += p2.clone();
         assert_eq!(p.row, 8);
-        assert_eq!(p.col, 10);
+        assert_eq!(p.col, 13);
+
+        let p = p1.clone() - p2.clone();
+        assert_eq!(p.row, -2);
+        assert_eq!(p.col, -5);
 
         let p = p1.clone() * 3;
         assert_eq!(p.row, 9);
         assert_eq!(p.col, 12);
+    }
+
+    #[test]
+    fn manhattan() {
+        let p1 = Pt { row: 3, col: 4 };
+        let p2 = Pt { row: -3, col: 4 };
+
+        assert_eq!(p1.manhattan_len(), 7);
+        assert_eq!(p2.manhattan_len(), 7);
     }
 
     #[test]
