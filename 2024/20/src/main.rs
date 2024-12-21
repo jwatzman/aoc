@@ -26,7 +26,7 @@ struct Racetrack {
 enum Cheat {
     CanCheat(usize),
     Cheating(usize, Pt),
-    Cheated(Pt, Pt),
+    Cheated,
 }
 
 fn parse_input(contents: String) -> Racetrack {
@@ -78,10 +78,10 @@ fn adj<'a>(
                 if banned_cheats.contains(&cheat) {
                     None
                 } else {
-                    Some((pt.clone(), Cheat::Cheated(start, pt.clone())))
+                    Some((pt.clone(), Cheat::Cheated))
                 }
             }
-            (Position::Track, Cheat::Cheated(_, _)) => Some((pt, state.1.clone())),
+            (Position::Track, Cheat::Cheated) => Some((pt, state.1.clone())),
             (Position::Wall, Cheat::CanCheat(n)) => {
                 Some((pt.clone(), Cheat::Cheating(n - 1, pt.clone())))
             }
@@ -89,9 +89,23 @@ fn adj<'a>(
                 Some((pt, Cheat::Cheating(n - 1, start)))
             }
             (Position::Wall, Cheat::Cheating(_, _)) => None,
-            (Position::Wall, Cheat::Cheated(_, _)) => None,
+            (Position::Wall, Cheat::Cheated) => None,
         }
     })
+}
+
+fn reconstruct_cheat<'a>(
+    prev: &'a HashMap<(Pt, Cheat), (Pt, Cheat)>,
+    mut cur: &'a (Pt, Cheat),
+) -> (Pt, Pt) {
+    loop {
+        let next = prev.get(cur).unwrap();
+        match &next.1 {
+            Cheat::CanCheat(_) => panic!(),
+            Cheat::Cheating(_, start) => return (start.clone(), cur.0.clone()),
+            Cheat::Cheated => cur = next,
+        }
+    }
 }
 
 fn solve(
@@ -102,12 +116,14 @@ fn solve(
     let mut pq = priority_queue::PriorityQueue::new();
     let mut visited = HashSet::new();
     let mut costs = HashMap::new();
+    let mut prev = HashMap::new();
 
     let approx_sz = racetrack.map.len() * racetrack.map.len();
     visited.reserve(approx_sz);
     costs.reserve(approx_sz);
+    prev.reserve(approx_sz);
 
-    let init_state = (racetrack.start.clone(), init_cheat);
+    let init_state = (racetrack.start.clone(), init_cheat.clone());
 
     costs.insert(init_state.clone(), 0);
     pq.push(init_state, Reverse(0));
@@ -117,9 +133,11 @@ fn solve(
         if state.0 == racetrack.end {
             return (
                 cost,
-                match state.1 {
-                    Cheat::Cheated(start, end) => (start, end),
-                    _ => panic!(),
+                if init_cheat == Cheat::Cheated {
+                    let dummy_pt = Pt { row: 0, col: 0 };
+                    (dummy_pt.clone(), dummy_pt)
+                } else {
+                    reconstruct_cheat(&prev, &state)
                 },
             );
         }
@@ -131,11 +149,13 @@ fn solve(
             match prev_tot_cost_opt {
                 None => {
                     costs.insert(next.clone(), tot_cost);
+                    prev.insert(next.clone(), state.clone());
                     pq.push(next, Reverse(tot_cost));
                 }
                 Some(prev_tot_cost) => {
                     if tot_cost < *prev_tot_cost {
                         *prev_tot_cost = tot_cost;
+                        prev.insert(next.clone(), state.clone());
                         pq.push(next, Reverse(tot_cost));
                     }
                 }
@@ -153,16 +173,10 @@ fn main() {
     let racetrack = parse_input(fs::read_to_string(&args[1]).unwrap());
     let mut banned_cheats = HashSet::new();
 
-    let dummy_pt = Pt { row: 0, col: 0 };
-    let (baseline, _) = solve(
-        &racetrack,
-        &banned_cheats,
-        Cheat::Cheated(dummy_pt.clone(), dummy_pt.clone()),
-    );
+    let (baseline, _) = solve(&racetrack, &banned_cheats, Cheat::Cheated);
 
     let mut r = 0;
     loop {
-        println!("{r}");
         let (cheated, cheat_used) = solve(&racetrack, &banned_cheats, Cheat::CanCheat(2));
         let improvement = baseline - cheated;
         if improvement >= 100 {
