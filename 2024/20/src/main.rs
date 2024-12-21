@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-use std::collections::HashSet;
 use std::env;
 use std::fs;
 
@@ -84,75 +82,23 @@ fn flatten(racetrack: &Racetrack) -> Vec<Pt> {
     return path;
 }
 
-fn invert(path: &Vec<Pt>) -> HashMap<Pt, isize> {
-    path.iter()
-        .cloned()
-        .enumerate()
-        .map(|(a, b)| (b, a.try_into().unwrap()))
-        .collect()
-}
-
-fn find_cheat_destinations(
-    racetrack: &Racetrack,
-    start: &Pt,
-    cheat_time: isize,
-) -> HashSet<(Pt, isize)> {
-    let init_cheat_time = cheat_time;
-    let mut cheat_time = init_cheat_time;
-    let mut todo = vec![start.clone()];
-    let mut todo_next;
-    let mut visited = HashSet::new();
-    let mut dests = HashSet::new();
-
-    while !todo.is_empty() && cheat_time > 0 {
-        todo_next = Vec::new();
-        cheat_time -= 1;
-
-        for cur in todo {
-            visited.insert(cur.clone());
-
-            for next in Direction::ALL.map(|d| &cur + d.delta()) {
-                if visited.contains(&next) {
-                    continue;
-                }
-
-                match try_get(&racetrack.map, &next) {
-                    None => continue,
-                    Some(Position::Wall) => {
-                        todo_next.push(next);
-                    }
-                    Some(Position::Track) => {
-                        dests.insert((next, init_cheat_time - cheat_time));
-                    }
-                }
-            }
-        }
-
-        todo = todo_next;
-    }
-
-    return dests;
-}
-
-fn count_cheats(racetrack: &Racetrack, cheat_time: isize, cheat_improvement: isize) -> usize {
+fn count_cheats(racetrack: &Racetrack, cheat_time: RC, cheat_improvement: RC) -> usize {
     let path = flatten(racetrack);
-    let inverted_path = invert(&path);
     let mut cnt = 0;
 
-    for cheat_start in path {
-        for (cheat_dest, cheated_steps) in
-            find_cheat_destinations(racetrack, &cheat_start, cheat_time)
-        {
-            let uncheated_steps =
-                inverted_path.get(&cheat_dest).unwrap() - inverted_path.get(&cheat_start).unwrap();
-            //dbg!(&cheat_start, &cheat_dest, &uncheated_steps, &cheated_steps);
-            match uncheated_steps.checked_sub(cheated_steps) {
-                None => (),
-                Some(n) => {
-                    if n >= cheat_improvement {
-                        cnt += 1;
-                    }
-                }
+    for i in 0..path.len() {
+        let start = &path[i];
+        for j in (i + 1)..path.len() {
+            let end = &path[j];
+
+            let cheated_distance = (end - start).manhattan_len();
+            if cheated_distance > cheat_time {
+                continue;
+            }
+
+            let improvement = i16::try_from(j - i).unwrap() - cheated_distance;
+            if improvement >= cheat_improvement {
+                cnt += 1;
             }
         }
     }
@@ -164,6 +110,6 @@ fn main() {
     let args: Vec<_> = env::args().collect();
     let racetrack = parse_input(fs::read_to_string(&args[1]).unwrap());
 
-    let cheats = count_cheats(&racetrack, 2, 100);
+    let cheats = count_cheats(&racetrack, 20, 100);
     println!("{cheats}");
 }
