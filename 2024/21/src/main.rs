@@ -146,7 +146,16 @@ fn expand<T: Button>(code: &Vec<T>) -> Vec<DirectionalButton> {
         })
         .take(col_diff.abs().try_into().unwrap());
 
+        // If we are forced to avoid the hole, do that. If we have a choice,
+        // some options are actually better than others -- see
+        // https://www.reddit.com/r/adventofcode/comments/1hj7f89/comment/m34erhg/
         if cur_loc.col() == T::HOLE.1 && next_loc.row() == T::HOLE.0 {
+            out.extend(col_presses);
+            out.extend(row_presses);
+        } else if cur_loc.row() == T::HOLE.0 && next_loc.col() == T::HOLE.1 {
+            out.extend(row_presses);
+            out.extend(col_presses);
+        } else if col_diff < 0 {
             out.extend(col_presses);
             out.extend(row_presses);
         } else {
