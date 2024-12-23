@@ -171,16 +171,16 @@ fn expand<T: Button>(code: &Vec<T>) -> Vec<DirectionalButton> {
 }
 
 fn expand_all(code: &Vec<NumericButton>) -> Vec<DirectionalButton> {
-    let lv1 = expand(code);
-    print_buttons(&lv1);
-    let lv2 = expand(&lv1);
-    print_buttons(&lv2);
-    let lv3 = expand(&lv2);
-    print_buttons(&lv3);
-    println!("{}", lv3.len());
-    return lv3;
+    let mut cur = expand(code);
+
+    for _ in 0..2 {
+        cur = expand(&cur);
+    }
+
+    return cur;
 }
 
+#[allow(dead_code)]
 fn print_buttons(buttons: &Vec<DirectionalButton>) {
     for button in buttons {
         print!("{button}");
