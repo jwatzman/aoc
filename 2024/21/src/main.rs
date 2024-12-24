@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::env;
 use std::fmt::Display;
 use std::fs;
@@ -8,12 +9,19 @@ type RC = i8;
 trait Button: Copy + Eq {
     fn row(&self) -> RC;
     fn col(&self) -> RC;
+    fn memo(&self) -> MemoButton;
 
     const HOLE: (RC, RC);
     const START: Self;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum MemoButton {
+    N(NumericButton),
+    D(DirectionalButton),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum NumericButton {
     Zero,
     One,
@@ -46,11 +54,15 @@ impl Button for NumericButton {
         }
     }
 
+    fn memo(&self) -> MemoButton {
+        MemoButton::N(*self)
+    }
+
     const HOLE: (RC, RC) = (3, 0);
     const START: Self = NumericButton::Activate;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum DirectionalButton {
     Up,
     Down,
@@ -86,6 +98,10 @@ impl Button for DirectionalButton {
             Self::Up | Self::Down => 1,
             Self::Activate | Self::Right => 2,
         }
+    }
+
+    fn memo(&self) -> MemoButton {
+        MemoButton::D(*self)
     }
 
     const HOLE: (RC, RC) = (0, 0);
@@ -165,7 +181,11 @@ fn expand_button<T: Button>(cur_loc: T, next_loc: T) -> Vec<DirectionalButton> {
     return out;
 }
 
-fn count_expanded_buttons<T: Button>(code: &Vec<T>, depth: u8) -> usize {
+fn count_expanded_buttons<T: Button>(
+    code: &Vec<T>,
+    memo: &mut HashMap<(MemoButton, MemoButton, u8), usize>,
+    depth: u8,
+) -> usize {
     if depth == 0 {
         return code.len();
     }
@@ -174,8 +194,16 @@ fn count_expanded_buttons<T: Button>(code: &Vec<T>, depth: u8) -> usize {
     let mut r = 0;
 
     for next_loc in code {
-        let next_code = expand_button(cur_loc, *next_loc);
-        r += count_expanded_buttons(&next_code, depth - 1);
+        let memo_key = (cur_loc.memo(), next_loc.memo(), depth);
+        match memo.get(&memo_key) {
+            Some(n) => r += n,
+            None => {
+                let next_code = expand_button(cur_loc, *next_loc);
+                let n = count_expanded_buttons(&next_code, memo, depth - 1);
+                r += n;
+                memo.insert(memo_key, n);
+            }
+        }
         cur_loc = *next_loc;
     }
 
@@ -191,8 +219,9 @@ fn main() {
     let codes = parse_input(fs::read_to_string(&args[1]).unwrap());
 
     let mut r = 0;
+    let mut memo = HashMap::new();
     for code in &codes {
-        let cnt = count_expanded_buttons(&code.0, 3);
+        let cnt = count_expanded_buttons(&code.0, &mut memo, 26);
         r += cnt * code.1;
     }
 
