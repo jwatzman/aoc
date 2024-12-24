@@ -5,7 +5,7 @@ use std::iter;
 
 type RC = i8;
 
-trait Button: Copy {
+trait Button: Copy + Eq {
     fn row(&self) -> RC;
     fn col(&self) -> RC;
 
@@ -124,68 +124,66 @@ fn parse_input(contents: String) -> Vec<(Vec<NumericButton>, usize)> {
     return codes;
 }
 
-fn expand<T: Button>(code: &Vec<T>) -> Vec<DirectionalButton> {
-    let mut cur_loc = T::START;
+fn expand_button<T: Button>(cur_loc: T, next_loc: T) -> Vec<DirectionalButton> {
     let mut out = Vec::new();
 
-    for next_loc in code {
-        let row_diff = next_loc.row() - cur_loc.row();
-        let col_diff = next_loc.col() - cur_loc.col();
+    let row_diff = next_loc.row() - cur_loc.row();
+    let col_diff = next_loc.col() - cur_loc.col();
 
-        let row_presses = iter::repeat(if row_diff < 0 {
-            DirectionalButton::Up
-        } else {
-            DirectionalButton::Down
-        })
-        .take(row_diff.abs().try_into().unwrap());
+    let row_presses = iter::repeat(if row_diff < 0 {
+        DirectionalButton::Up
+    } else {
+        DirectionalButton::Down
+    })
+    .take(row_diff.abs().try_into().unwrap());
 
-        let col_presses = iter::repeat(if col_diff < 0 {
-            DirectionalButton::Left
-        } else {
-            DirectionalButton::Right
-        })
-        .take(col_diff.abs().try_into().unwrap());
+    let col_presses = iter::repeat(if col_diff < 0 {
+        DirectionalButton::Left
+    } else {
+        DirectionalButton::Right
+    })
+    .take(col_diff.abs().try_into().unwrap());
 
-        // If we are forced to avoid the hole, do that. If we have a choice,
-        // some options are actually better than others -- see
-        // https://www.reddit.com/r/adventofcode/comments/1hj7f89/comment/m34erhg/
-        if cur_loc.col() == T::HOLE.1 && next_loc.row() == T::HOLE.0 {
-            out.extend(col_presses);
-            out.extend(row_presses);
-        } else if cur_loc.row() == T::HOLE.0 && next_loc.col() == T::HOLE.1 {
-            out.extend(row_presses);
-            out.extend(col_presses);
-        } else if col_diff < 0 {
-            out.extend(col_presses);
-            out.extend(row_presses);
-        } else {
-            out.extend(row_presses);
-            out.extend(col_presses);
-        }
-
-        out.push(DirectionalButton::Activate);
-        cur_loc = *next_loc;
+    // If we are forced to avoid the hole, do that. If we have a choice,
+    // some options are actually better than others -- see
+    // https://www.reddit.com/r/adventofcode/comments/1hj7f89/comment/m34erhg/
+    if cur_loc.col() == T::HOLE.1 && next_loc.row() == T::HOLE.0 {
+        out.extend(col_presses);
+        out.extend(row_presses);
+    } else if cur_loc.row() == T::HOLE.0 && next_loc.col() == T::HOLE.1 {
+        out.extend(row_presses);
+        out.extend(col_presses);
+    } else if col_diff < 0 {
+        out.extend(col_presses);
+        out.extend(row_presses);
+    } else {
+        out.extend(row_presses);
+        out.extend(col_presses);
     }
 
+    out.push(DirectionalButton::Activate);
     return out;
 }
 
-fn expand_all(code: &Vec<NumericButton>) -> Vec<DirectionalButton> {
-    let mut cur = expand(code);
-
-    for _ in 0..2 {
-        cur = expand(&cur);
+fn count_expanded_buttons<T: Button>(code: &Vec<T>, depth: u8) -> usize {
+    if depth == 0 {
+        return code.len();
     }
 
-    return cur;
-}
+    let mut cur_loc = T::START;
+    let mut r = 0;
 
-#[allow(dead_code)]
-fn print_buttons(buttons: &Vec<DirectionalButton>) {
-    for button in buttons {
-        print!("{button}");
+    for next_loc in code {
+        let next_code = expand_button(cur_loc, *next_loc);
+        r += count_expanded_buttons(&next_code, depth - 1);
+        cur_loc = *next_loc;
     }
-    print!("\n");
+
+    if cur_loc != T::START {
+        panic!();
+    }
+
+    return r;
 }
 
 fn main() {
@@ -194,8 +192,8 @@ fn main() {
 
     let mut r = 0;
     for code in &codes {
-        let long = expand_all(&code.0);
-        r += long.len() * code.1;
+        let cnt = count_expanded_buttons(&code.0, 3);
+        r += cnt * code.1;
     }
 
     println!("{r}");
