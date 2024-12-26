@@ -1,10 +1,10 @@
+mod maximal_cliques;
+
 use std::collections::HashMap;
 use std::env;
 use std::fs;
 
 use petgraph::graph;
-use petgraph::visit::EdgeRef;
-use petgraph::visit::IntoNodeReferences;
 
 fn parse_input(contents: &String) -> graph::UnGraph<&str, ()> {
     let mut g = graph::UnGraph::new_undirected();
@@ -36,36 +36,18 @@ fn main() {
     let contents = fs::read_to_string(&args[1]).unwrap();
     let g = parse_input(&contents);
 
-    let mut r = 0;
-    for e in g.edge_references() {
-        for (n, n_name) in g.node_references() {
-            let s = e.source();
-            let t = e.target();
-            if n == s || n == t {
-                continue;
-            }
-
-            if !g.contains_edge(n, s) || !g.contains_edge(n, t) {
-                continue;
-            }
-
-            let s_name = g.node_weight(s).unwrap();
-            let t_name = g.node_weight(t).unwrap();
-
-            let n_1 = n_name.chars().next().unwrap();
-            let s_1 = s_name.chars().next().unwrap();
-            let t_1 = t_name.chars().next().unwrap();
-
-            if n_1 != 't' && s_1 != 't' && t_1 != 't' {
-                continue;
-            }
-
-            r += 1;
+    let mut cliques = maximal_cliques::maximal_cliques(&g);
+    let mut best = cliques.pop().unwrap();
+    for clique in cliques.into_iter() {
+        if clique.len() > best.len() {
+            best = clique;
         }
     }
 
-    assert_eq!(r % 3, 0);
-    r /= 3;
-
-    println!("{r}");
+    let mut names: Vec<_> = best
+        .into_iter()
+        .map(|n| *g.node_weight(n).unwrap())
+        .collect();
+    names.sort();
+    println!("{}", names.join(","));
 }
