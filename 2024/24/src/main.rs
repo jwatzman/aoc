@@ -163,6 +163,20 @@ fn main() {
     match overwrites {
         None => (),
         Some((x, y)) => {
+            let mut i = 0_u64;
+            loop {
+                let wire_name = format!("z{i:02}");
+                let c = match wires.get(wire_name.as_str()) {
+                    None => break,
+                    Some(WireState::NoValue) => panic!(),
+                    Some(WireState::Value(true)) => '1',
+                    Some(WireState::Value(false)) => '0',
+                };
+                println!("{wire_name}: {c}");
+
+                i += 1;
+            }
+
             println!("");
             println!("{x:#048b}");
             println!("{y:#048b}");
