@@ -77,10 +77,40 @@ fn parse_input(contents: &String) -> (HashMap<WireName, WireState>, Vec<Gate>) {
     return (wires, gates);
 }
 
+fn overwrite_input(wires: &mut HashMap<WireName, WireState>, prefix: char, mut n: u64) {
+    let mut i = 0_u64;
+    loop {
+        let wire_name = format!("{prefix}{i:02}");
+        let wire_ref = match wires.get_mut(wire_name.as_str()) {
+            None => {
+                assert_eq!(n, 0);
+                break;
+            }
+            Some(r) => r,
+        };
+
+        assert_ne!(*wire_ref, WireState::NoValue);
+        *wire_ref = WireState::Value((n & 1) == 1);
+
+        i += 1;
+        n >>= 1;
+    }
+}
+
 fn main() {
     let args: Vec<_> = env::args().collect();
     let contents = fs::read_to_string(&args[1]).unwrap();
     let (mut wires, mut gates) = parse_input(&contents);
+
+    let overwrites = if args.len() == 4 {
+        let x = args[2].parse().unwrap();
+        overwrite_input(&mut wires, 'x', x);
+        let y = args[3].parse().unwrap();
+        overwrite_input(&mut wires, 'y', y);
+        Some((x, y))
+    } else {
+        None
+    };
 
     loop {
         let old_len = gates.len();
@@ -129,4 +159,14 @@ fn main() {
     }
 
     println!("{r}");
+
+    match overwrites {
+        None => (),
+        Some((x, y)) => {
+            println!("");
+            println!("{x:#048b}");
+            println!("{y:#048b}");
+            println!("{r:#048b}");
+        }
+    }
 }
