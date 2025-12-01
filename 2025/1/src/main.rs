@@ -1,21 +1,15 @@
 use std::{env, fs};
 
-#[derive(Debug)]
-enum Turn {
-    Left(u32),
-    Right(u32),
-}
-
-fn parse_line(line: &str) -> Turn {
-    let n: u32 = line[1..].parse().unwrap();
+fn parse_line(line: &str) -> i64 {
+    let n: i64 = line[1..].parse().unwrap();
     match line.chars().next().unwrap() {
-        'L' => Turn::Left(n),
-        'R' => Turn::Right(n),
+        'L' => -n,
+        'R' => n,
         _ => panic!("Invalid char"),
     }
 }
 
-fn parse_input(contents: String) -> Vec<Turn> {
+fn parse_input(contents: String) -> Vec<i64> {
     contents
         .split('\n')
         .filter(|s| !s.is_empty())
@@ -30,15 +24,20 @@ fn main() {
 
     let mut pos: i64 = 50;
     let mut result = 0;
-    for turn in &input {
-        match turn {
-            Turn::Left(n) => pos -= i64::from(*n),
-            Turn::Right(n) => pos += i64::from(*n),
-        }
+    for n in &input {
+        let was_zero = pos == 0;
 
+        pos += n;
+        result += pos.div_euclid(100).abs();
         pos = pos.rem_euclid(100);
-        if pos == 0 {
-            result += 1;
+
+        if *n < 0 {
+            if was_zero {
+                result -= 1;
+            }
+            if pos == 0 {
+                result += 1;
+            }
         }
     }
 
